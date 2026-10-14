@@ -243,7 +243,7 @@
                     </svg>
                     <input type="text" placeholder="Search keyword...">
                 </div>
-                <button class="btn-signin" id="signInBtn">SIGN IN</button>
+                <a href="{{ route('login') }}" class="btn-signin" id="signInBtn" style="text-decoration:none;display:inline-flex;align-items:center;">SIGN IN</a>
             </div>
         </nav>
 
