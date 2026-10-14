@@ -1,67 +1,299 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SecureTS — Sign in without passwords</title>
-    <link rel="icon" href="/favicon.ico" sizes="any">
-    @fonts
-    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @endif
-    @livewireStyles
+    <title>SecureTS – ThreatShield</title>
+    <meta name="description" content="SecureTS ThreatShield – Multi-Factor Authentication and threat protection platform. Fast, secure, and passwordless.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --brand-blue: #3866E6;
+            --brand-dark: #0F172A;
+            --brand-darker: #0A0F1E;
+            --brand-mid: #1E293B;
+            --brand-border: rgba(255,255,255,0.1);
+            --text-primary: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        html, body { height: 100%; font-family: 'Inter', sans-serif; }
+
+        /* ─── SPLASH SCREEN ─── */
+        #splash {
+            position: fixed; inset: 0;
+            background: var(--brand-blue);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.7s ease, visibility 0.7s ease;
+        }
+        #splash.fade-out { opacity: 0; visibility: hidden; }
+
+        .splash-logo {
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            animation: splashPulse 2s ease-in-out infinite;
+        }
+        .splash-logo-row {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .splash-logo-icon {
+            display: flex; align-items: center; gap: 6px;
+        }
+        .hexagon {
+            width: 40px; height: 40px;
+            background: #0F172A;
+            clip-path: polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .hexagon svg { color: white; }
+        .shield-icon { width: 36px; height: 40px; }
+        .brand-text-wrap { display: flex; flex-direction: column; }
+        .brand-name { font-size: 22px; font-weight: 700; color: #0F172A; letter-spacing: -0.3px; line-height: 1; }
+        .brand-sub  { font-size: 11px; font-weight: 500; color: #0F172A; letter-spacing: 0.5px; }
+
+        @keyframes splashPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.04); opacity: 0.92; }
+        }
+
+        /* ─── MAIN SITE ─── */
+        #main-site {
+            opacity: 0;
+            transition: opacity 0.7s ease;
+            min-height: 100vh;
+            background: var(--brand-dark);
+            color: var(--text-primary);
+        }
+        #main-site.visible { opacity: 1; }
+
+        /* ─── NAVBAR ─── */
+        nav {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 32px; height: 64px;
+            background: var(--brand-darker);
+            border-bottom: 1px solid var(--brand-border);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .nav-logo { display: flex; align-items: center; gap: 8px; }
+        .nav-logo .hexagon { width: 30px; height: 30px; }
+        .nav-logo .brand-name { font-size: 16px; color: white; }
+        .nav-logo .brand-sub  { font-size: 9px; color: var(--text-muted); }
+        .nav-links { display: flex; align-items: center; gap: 28px; }
+        .nav-links a {
+            color: var(--text-muted); font-size: 14px; font-weight: 500;
+            text-decoration: none; transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--text-primary); }
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .search-box {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--brand-mid); border: 1px solid var(--brand-border);
+            border-radius: 8px; padding: 7px 14px;
+            color: var(--text-muted); font-size: 13px; font-family: 'Inter', sans-serif;
+        }
+        .search-box input {
+            background: transparent; border: none; outline: none;
+            color: var(--text-muted); font-size: 13px; width: 120px; font-family: 'Inter', sans-serif;
+        }
+        .search-box input::placeholder { color: var(--text-muted); }
+        .btn-signin {
+            background: var(--brand-blue); color: white;
+            border: none; border-radius: 8px;
+            padding: 9px 20px; font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: background 0.2s, transform 0.1s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-signin:hover { background: #2c55d0; transform: translateY(-1px); }
+
+        /* ─── HERO SECTION ─── */
+        .hero {
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; padding: 100px 24px 80px;
+        }
+        .hero h1 {
+            font-size: clamp(32px, 5vw, 52px);
+            font-weight: 800; line-height: 1.15;
+            color: var(--text-primary);
+            max-width: 620px; margin-bottom: 20px;
+        }
+        .hero p {
+            font-size: 16px; color: var(--text-muted);
+            max-width: 480px; line-height: 1.7; margin-bottom: 40px;
+        }
+        .hero-buttons { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; }
+        .btn-discover {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--text-primary); color: var(--brand-dark);
+            border: none; border-radius: 10px; padding: 14px 26px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-discover:hover { background: #E2E8F0; transform: translateY(-2px); }
+        .btn-try {
+            background: var(--brand-blue); color: white;
+            border: none; border-radius: 10px; padding: 14px 26px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-try:hover { background: #2c55d0; transform: translateY(-2px); }
+
+        /* ─── STATS BAR ─── */
+        .stats-bar {
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; padding: 24px;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: var(--brand-mid); border: 1px solid var(--brand-border);
+            border-radius: 10px; padding: 14px 22px; min-width: 130px; text-align: center;
+            position: relative; overflow: hidden;
+        }
+        .stat-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+        }
+        .stat-card.yellow::before { background: #EAB308; }
+        .stat-card.magenta::before { background: #E11D48; }
+        .stat-card.green::before  { background: #22C55E; }
+        .stat-card.blue::before   { background: var(--brand-blue); }
+
+        .stat-value {
+            font-size: 15px; font-weight: 700; margin-bottom: 4px;
+        }
+        .stat-card.yellow  .stat-value  { color: #EAB308; }
+        .stat-card.magenta .stat-value  { color: #E11D48; }
+        .stat-card.green   .stat-value  { color: #22C55E; }
+        .stat-card.blue    .stat-value  { color: var(--brand-blue); }
+
+        .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+    </style>
 </head>
-<body class="min-h-screen overflow-x-hidden bg-[#11182b] font-sans text-slate-100 antialiased selection:bg-indigo-400 selection:text-white">
-    <div class="relative isolate overflow-hidden">
-        <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[800px] bg-[radial-gradient(circle_at_70%_0%,rgba(92,99,255,0.34),transparent_32%),radial-gradient(circle_at_15%_15%,rgba(66,153,225,0.18),transparent_24%)]"></div>
-        <div class="pointer-events-none absolute inset-0 -z-10 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,.9)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.9)_1px,transparent_1px)] [background-size:34px_34px]"></div>
+<body>
 
-        <header class="border-b border-white/10 bg-[#11182b]/75 backdrop-blur-xl">
-            <div class="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
-                <a href="#top" class="flex items-center gap-3" aria-label="SecureTS home">
-                    <span class="grid size-10 place-items-center rounded-xl bg-indigo-500 text-lg font-black shadow-lg shadow-indigo-950/50">S</span>
-                    <span><span class="block text-base font-bold tracking-tight text-white">Secure<span class="text-indigo-300">TS</span></span><span class="block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Secure trust, simply</span></span>
-                </a>
-                <nav class="hidden items-center gap-7 text-sm font-medium text-slate-300 md:flex" aria-label="Primary navigation">
-                    <a href="#how-it-works" class="transition hover:text-white">How it works</a><a href="#security" class="transition hover:text-white">Security</a><a href="#demo" class="transition hover:text-white">Live demo</a><a href="#faq" class="transition hover:text-white">FAQ</a>
-                </nav>
-                <a href="#waitlist" class="rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-950/40 transition hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-300">Get early access</a>
-            </div>
-        </header>
-
-        <main id="top">
-            <section class="mx-auto grid max-w-7xl items-center gap-14 px-6 pb-20 pt-20 lg:grid-cols-[1.05fr_.95fr] lg:px-8 lg:pb-28 lg:pt-28">
-                <div>
-                    <div class="mb-7 inline-flex items-center gap-2 rounded-full border border-indigo-300/20 bg-indigo-400/10 px-3 py-1.5 text-xs font-semibold text-indigo-200"><span class="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_2px_rgba(74,222,128,.5)]"></span>Passwordless security for every team</div>
-                    <h1 class="max-w-xl text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">Secure sign-in.<br><span class="text-indigo-300">Trusted devices.</span></h1>
-                    <p class="mt-7 max-w-xl text-base leading-7 text-slate-300 sm:text-lg">SecureTS replaces passwords with a fast, cryptographically verified approval from the device already in your hand.</p>
-                    <div class="mt-9 flex flex-col gap-3 sm:flex-row"><a href="#demo" class="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-bold text-slate-950 transition hover:bg-indigo-50">Watch it work <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" /></svg></a><a href="#waitlist" class="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-5 py-3.5 text-sm font-bold text-white transition hover:border-indigo-300/50 hover:bg-white/10">Join the waitlist</a></div>
-                    <div class="mt-12 grid max-w-xl grid-cols-3 gap-5 border-t border-white/10 pt-6"><div><p class="text-xl font-black text-white">&lt; 450ms</p><p class="mt-1 text-xs text-slate-400">Average approval</p></div><div><p class="text-xl font-black text-white">0</p><p class="mt-1 text-xs text-slate-400">Passwords stored</p></div><div><p class="text-xl font-black text-white">100%</p><p class="mt-1 text-xs text-slate-400">Phishing resistant</p></div></div>
-                </div>
-                <div class="relative mx-auto w-full max-w-xl">
-                    <div class="absolute -inset-5 -z-10 rounded-[2.5rem] bg-indigo-500/20 blur-3xl"></div>
-                    <div class="overflow-hidden rounded-3xl border border-white/15 bg-[#1c2747] shadow-2xl shadow-slate-950/50">
-                        <div class="flex items-center justify-between border-b border-white/10 px-5 py-3.5"><div class="flex gap-1.5"><span class="size-2.5 rounded-full bg-rose-400"></span><span class="size-2.5 rounded-full bg-amber-300"></span><span class="size-2.5 rounded-full bg-emerald-400"></span></div><span class="text-[11px] font-medium text-slate-400">securets.app / sign-in</span><span class="size-4"></span></div>
-                        <div class="grid min-h-[345px] grid-cols-[1.15fr_.85fr] gap-5 p-5 sm:p-7"><div class="flex flex-col justify-center"><span class="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-indigo-300">Welcome back</span><h2 class="text-2xl font-bold text-white">Approve sign-in<br>on your phone.</h2><div class="mt-6 rounded-xl border border-white/10 bg-slate-950/40 p-4 font-mono text-[11px] leading-6 text-slate-400"><p><span class="text-indigo-300">challenge</span> · 842-195</p><p><span class="text-emerald-300">device</span> · iPhone 16 Pro</p><p><span class="text-slate-500">status</span> · awaiting approval</p></div><div class="mt-4 flex items-center gap-2 text-xs font-medium text-amber-200"><span class="size-2 rounded-full bg-amber-300 animate-pulse"></span> Request sent securely</div></div><div class="my-auto rounded-[1.8rem] border-[5px] border-slate-950 bg-[#0d1325] p-3 shadow-xl"><div class="mx-auto h-1.5 w-14 rounded-full bg-slate-700"></div><div class="flex min-h-[260px] flex-col justify-between py-5"><div><p class="text-[10px] text-slate-500">9:41</p><p class="mt-5 text-xs font-semibold text-white">SecureTS</p></div><div class="rounded-xl border border-indigo-400/30 bg-indigo-500/15 p-3"><p class="text-[10px] font-bold text-indigo-100">Sign-in request</p><p class="mt-1 text-[9px] leading-4 text-slate-400">MacBook Pro · Manila, PH</p><button type="button" class="mt-3 w-full rounded-lg bg-indigo-400 py-2 text-[10px] font-bold text-slate-950">Approve with Face ID</button></div><div class="mx-auto h-1 w-12 rounded-full bg-slate-700"></div></div></div></div>
+    {{-- ═══════════════════════════════ SPLASH SCREEN ═══════════════════════════════ --}}
+    <div id="splash">
+        <div class="splash-logo">
+            <div class="splash-logo-row">
+                <div class="splash-logo-icon">
+                    {{-- Hexagon lock --}}
+                    <div class="hexagon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/>
+                        </svg>
                     </div>
+                    {{-- Shield --}}
+                    <svg class="shield-icon" viewBox="0 0 36 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 0L0 7v13c0 11 7.5 20.9 18 24 10.5-3.1 18-13 18-24V7L18 0z" fill="#1E293B"/>
+                        <path d="M18 0L0 7v13h18V0z" fill="#C0392B"/>
+                        <path d="M18 7L0 7v13h18V7z" fill="#E74C3C" opacity="0.3"/>
+                        <path d="M18 0L36 7v13H18V0z" fill="#ECF0F1"/>
+                        <path d="M18 20H0v13c0 0 7.5 7 18 7V20z" fill="#27AE60"/>
+                        <path d="M18 20H36v13c0 0-7.5 7-18 7V20z" fill="#2980B9"/>
+                        <path d="M14 14l-4 4 6 6 10-10-2-2-8 8-4-4-2 2 6 6 10-10-2-2z" fill="white" opacity="0.8"/>
+                    </svg>
                 </div>
-            </section>
-
-            <section id="how-it-works" class="border-y border-white/10 bg-[#17213b] py-20 sm:py-24"><div class="mx-auto max-w-7xl px-6 lg:px-8"><div class="max-w-2xl"><p class="text-xs font-bold uppercase tracking-[0.2em] text-indigo-300">The sign-in flow</p><h2 class="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">Strong security should feel effortless.</h2></div><div class="mt-12 grid gap-5 md:grid-cols-3"><article class="rounded-2xl border border-white/10 bg-[#202d51] p-7"><span class="grid size-10 place-items-center rounded-xl bg-indigo-400/15 text-sm font-black text-indigo-200">01</span><h3 class="mt-7 text-lg font-bold text-white">Start on desktop</h3><p class="mt-3 text-sm leading-6 text-slate-300">Open your app and request a sign-in. SecureTS creates a single-use encrypted challenge.</p></article><article class="rounded-2xl border border-white/10 bg-[#202d51] p-7"><span class="grid size-10 place-items-center rounded-xl bg-indigo-400/15 text-sm font-black text-indigo-200">02</span><h3 class="mt-7 text-lg font-bold text-white">Verify the details</h3><p class="mt-3 text-sm leading-6 text-slate-300">Your phone shows the device, location, and a matching code before you approve anything.</p></article><article class="rounded-2xl border border-white/10 bg-[#202d51] p-7"><span class="grid size-10 place-items-center rounded-xl bg-emerald-400/15 text-sm font-black text-emerald-200">03</span><h3 class="mt-7 text-lg font-bold text-white">Unlock with biometrics</h3><p class="mt-3 text-sm leading-6 text-slate-300">Face ID or Touch ID signs the request in hardware. No password is ever typed or transmitted.</p></article></div></div></section>
-
-            <section id="security" class="bg-[#11182b] py-20 sm:py-24"><div class="mx-auto grid max-w-7xl items-center gap-12 px-6 lg:grid-cols-[.9fr_1.1fr] lg:px-8"><div><p class="text-xs font-bold uppercase tracking-[0.2em] text-indigo-300">Built for real threats</p><h2 class="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">Your identity stays on your device.</h2><p class="mt-5 max-w-md text-base leading-7 text-slate-300">Each approval is bound to the real domain and signed by your phone’s secure hardware, protecting people from phishing pages and stolen credentials.</p><a href="#demo" class="mt-7 inline-flex items-center gap-2 text-sm font-bold text-indigo-200 transition hover:text-white">Explore the live demo <span aria-hidden="true">→</span></a></div><div class="grid gap-4 sm:grid-cols-2"><article class="rounded-2xl border border-white/10 bg-[#202d51] p-6"><div class="text-xl">◈</div><h3 class="mt-5 font-bold text-white">Phishing resistant</h3><p class="mt-2 text-sm leading-6 text-slate-400">Approvals are tied to the genuine site—not a lookalike.</p></article><article class="rounded-2xl border border-white/10 bg-[#202d51] p-6"><div class="text-xl">⌁</div><h3 class="mt-5 font-bold text-white">No credential database</h3><p class="mt-2 text-sm leading-6 text-slate-400">There is no password hash for an attacker to steal.</p></article><article class="rounded-2xl border border-white/10 bg-[#202d51] p-6"><div class="text-xl">◉</div><h3 class="mt-5 font-bold text-white">Hardware-backed</h3><p class="mt-2 text-sm leading-6 text-slate-400">Private keys remain protected in the device secure enclave.</p></article><article class="rounded-2xl border border-white/10 bg-[#202d51] p-6"><div class="text-xl">↯</div><h3 class="mt-5 font-bold text-white">Fast by design</h3><p class="mt-2 text-sm leading-6 text-slate-400">A familiar biometric tap replaces forms and resets.</p></article></div></div></section>
-
-            <section id="demo" class="border-y border-white/10 bg-[#17213b] py-20 sm:py-24"><div class="mx-auto max-w-7xl px-6 lg:px-8"><div class="mx-auto max-w-2xl text-center"><p class="text-xs font-bold uppercase tracking-[0.2em] text-indigo-300">Try the protocol</p><h2 class="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">A safer sign-in, in motion.</h2><p class="mt-4 text-base leading-7 text-slate-300">Run a secure approval, pair a device, or simulate a phishing attempt—all without leaving this page.</p></div><div class="mt-12 rounded-3xl border border-white/10 bg-white p-3 shadow-2xl shadow-slate-950/30 sm:p-6"><livewire:auth-simulator /></div></div></section>
-
-            <section class="bg-[#11182b] py-20 sm:py-24"><div class="mx-auto grid max-w-7xl items-center gap-12 px-6 lg:grid-cols-2 lg:px-8"><div class="order-2 lg:order-1"><div class="mx-auto max-w-md overflow-hidden rounded-3xl border border-white/10 bg-[#202d51] p-6 shadow-xl"><div class="rounded-2xl bg-white p-5 text-slate-900"><div class="flex items-center justify-between border-b border-slate-200 pb-4"><span class="text-xs font-bold">SecureTS mobile</span><span class="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold text-emerald-700">Connected</span></div><div class="py-8 text-center"><div class="mx-auto grid size-16 place-items-center rounded-2xl bg-indigo-600 text-2xl font-black text-white">S</div><h3 class="mt-4 font-bold">Your trusted device</h3><p class="mt-2 text-xs leading-5 text-slate-500">Approve access, review sign-ins, and stay in control wherever you are.</p></div><div class="flex justify-between border-t border-slate-200 pt-4 text-[10px] font-medium text-slate-400"><span>Home</span><span class="text-indigo-600">Activity</span><span>Settings</span></div></div></div></div><div class="order-1 lg:order-2"><p class="text-xs font-bold uppercase tracking-[0.2em] text-indigo-300">The companion app</p><h2 class="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">Your phone becomes the key.</h2><p class="mt-5 max-w-lg text-base leading-7 text-slate-300">The SecureTS companion brings a clear, deliberate approval flow to the device you trust most. No codes to copy. No passwords to remember.</p><div class="mt-7 flex flex-wrap gap-3"><span class="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-200">iOS app coming soon</span><span class="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-200">Android app coming soon</span></div></div></div></section>
-
-            <section id="faq" class="border-y border-white/10 bg-[#17213b] py-20 sm:py-24"><div class="mx-auto max-w-3xl px-6 lg:px-8"><div class="text-center"><p class="text-xs font-bold uppercase tracking-[0.2em] text-indigo-300">Questions, answered</p><h2 class="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">Frequently asked questions</h2></div><div class="mt-10 space-y-3"><details class="group rounded-xl border border-white/10 bg-[#202d51] px-5 py-4" open><summary class="flex cursor-pointer list-none items-center justify-between gap-5 text-sm font-bold text-white">Is SecureTS a replacement for passwords?<span class="text-lg text-indigo-300 transition group-open:rotate-45">+</span></summary><p class="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Yes. SecureTS replaces password entry with an approval that is cryptographically signed by your trusted phone.</p></details><details class="group rounded-xl border border-white/10 bg-[#202d51] px-5 py-4"><summary class="flex cursor-pointer list-none items-center justify-between gap-5 text-sm font-bold text-white">What happens if I lose my phone?<span class="text-lg text-indigo-300 transition group-open:rotate-45">+</span></summary><p class="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Recovery is handled through verified recovery methods and device revocation, so lost devices can no longer approve requests.</p></details><details class="group rounded-xl border border-white/10 bg-[#202d51] px-5 py-4"><summary class="flex cursor-pointer list-none items-center justify-between gap-5 text-sm font-bold text-white">Can my team integrate it today?<span class="text-lg text-indigo-300 transition group-open:rotate-45">+</span></summary><p class="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Join the developer preview to receive access to the protocol and SDK as batches become available.</p></details></div></div></section>
-
-            <section id="waitlist" class="bg-[#11182b] py-20 sm:py-24"><div class="mx-auto max-w-3xl px-6 text-center lg:px-8"><p class="text-xs font-bold uppercase tracking-[0.2em] text-indigo-300">Developer preview</p><h2 class="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">Build a safer welcome screen.</h2><p class="mx-auto mt-4 max-w-xl text-base leading-7 text-slate-300">Be among the first teams to use passwordless, device-backed sign-in with SecureTS.</p><div class="mt-10 text-left"><livewire:waitlist-form /></div></div></section>
-        </main>
-
-        <footer class="border-t border-white/10 bg-[#0d1325]"><div class="mx-auto flex max-w-7xl flex-col gap-5 px-6 py-8 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between lg:px-8"><div class="flex items-center gap-2"><span class="grid size-6 place-items-center rounded-md bg-indigo-500 text-[10px] font-black text-white">S</span><span>© {{ date('Y') }} SecureTS. Secure trust, simply.</span></div><div class="flex gap-5"><a href="#security" class="transition hover:text-slate-300">Security</a><a href="#faq" class="transition hover:text-slate-300">FAQ</a><a href="#waitlist" class="transition hover:text-slate-300">Contact</a></div></div></footer>
+                <div class="brand-text-wrap">
+                    <span class="brand-name">Secure<span style="color:#1E3A8A">TS</span></span>
+                    <span class="brand-sub">ThreatShield</span>
+                </div>
+            </div>
+        </div>
     </div>
-    @livewireScripts
+
+    {{-- ═══════════════════════════════ MAIN SITE ═══════════════════════════════ --}}
+    <div id="main-site">
+
+        {{-- NAVBAR --}}
+        <nav>
+            <div class="nav-logo">
+                <div class="hexagon" style="width:30px;height:30px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+                        <path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/>
+                    </svg>
+                </div>
+                <svg width="26" height="30" viewBox="0 0 36 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 0L0 7v13c0 11 7.5 20.9 18 24 10.5-3.1 18-13 18-24V7L18 0z" fill="#1E293B"/>
+                    <path d="M18 0L0 7v13h18V0z" fill="#C0392B"/>
+                    <path d="M18 0L36 7v13H18V0z" fill="#ECF0F1"/>
+                    <path d="M18 20H0v13c0 0 7.5 7 18 7V20z" fill="#27AE60"/>
+                    <path d="M18 20H36v13c0 0-7.5 7-18 7V20z" fill="#2980B9"/>
+                </svg>
+                <div class="brand-text-wrap">
+                    <span class="brand-name" style="font-size:15px;color:white;">Secure<span style="color:var(--brand-blue)">TS</span></span>
+                    <span class="brand-sub" style="color:var(--text-muted);font-size:8px;">ThreatShield</span>
+                </div>
+            </div>
+
+            <div class="nav-links">
+                <a href="#about">About</a>
+                <a href="#features">Features</a>
+                <a href="#app">App</a>
+                <a href="#faq">FAQ</a>
+            </div>
+
+            <div class="nav-right">
+                <div class="search-box">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" placeholder="Search keyword...">
+                </div>
+                <button class="btn-signin" id="signInBtn">SIGN IN</button>
+            </div>
+        </nav>
+
+        {{-- HERO --}}
+        <section class="hero" id="about">
+            <h1>Really Big Inspiration Text about this Website</h1>
+            <p>A Short Description About the Really Big Inspiration Text about this Website above</p>
+            <div class="hero-buttons">
+                <button class="btn-discover" id="discoverBtn">
+                    Discover
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 5v14M5 12l7 7 7-7"/>
+                    </svg>
+                </button>
+                <button class="btn-try" id="tryBtn">Try it now!</button>
+            </div>
+        </section>
+
+        {{-- STATS BAR --}}
+        <div class="stats-bar" id="features">
+            <div class="stat-card yellow">
+                <div class="stat-value">&lt;500ms</div>
+                <div class="stat-label">Auth Latency</div>
+            </div>
+            <div class="stat-card magenta">
+                <div class="stat-value">0 Passwords</div>
+                <div class="stat-label">DB Credentials</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-value">100%</div>
+                <div class="stat-label">No Payment Method</div>
+            </div>
+            <div class="stat-card blue">
+                <div class="stat-value">Protected</div>
+                <div class="stat-label">Phishing immune</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 5-second splash then reveal main site
+        const splash    = document.getElementById('splash');
+        const mainSite  = document.getElementById('main-site');
+
+        setTimeout(function () {
+            splash.classList.add('fade-out');
+            mainSite.classList.add('visible');
+        }, 5000);
+    </script>
+
 </body>
 </html>

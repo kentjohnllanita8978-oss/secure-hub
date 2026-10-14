@@ -10,14 +10,14 @@ Route::prefix('api')->group(function () {
             'protection' => 'ThreatShield Mobile v2.4',
             'splash_delay' => '5.0 Seconds',
             'backend' => 'PHP Laravel 12 API',
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ]);
     });
 
     Route::get('/health', function () {
         return response()->json([
             'healthy' => true,
-            'service' => 'SecureHub ThreatShield API'
+            'service' => 'SecureHub ThreatShield API',
         ]);
     });
 });
