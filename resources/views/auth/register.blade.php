@@ -190,25 +190,7 @@
             gap: 10px;
             margin-bottom: 28px;
         }
-        .logo-icons {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .hexagon {
-            width: 38px;
-            height: 38px;
-            background: #0F172A;
-            clip-path: polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .shield-svg { width: 32px; height: 36px; }
-        .logo-text { display: flex; flex-direction: column; line-height: 1; }
-        .logo-name  { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
-        .logo-sub   { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.75); letter-spacing: 0.4px; margin-top: 2px; }
+        .logo img { height: 44px; width: auto; }
 
         /* ── Responsive ── */
         @media (max-width: 640px) {
@@ -238,25 +220,7 @@
 
         <!-- Logo -->
         <div class="logo">
-            <div class="logo-icons">
-                <div class="hexagon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/>
-                    </svg>
-                </div>
-                <svg class="shield-svg" viewBox="0 0 36 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18 0L0 7v13c0 11 7.5 20.9 18 24 10.5-3.1 18-13 18-24V7L18 0z" fill="#1E293B"/>
-                    <path d="M18 0L0 7v13h18V0z" fill="#C0392B"/>
-                    <path d="M18 0L36 7v13H18V0z" fill="#ECF0F1"/>
-                    <path d="M18 20H0v13c0 0 7.5 7 18 7V20z" fill="#27AE60"/>
-                    <path d="M18 20H36v13c0 0-7.5 7-18 7V20z" fill="#2980B9"/>
-                    <path d="M22 16l-5 5-3-3-2 2 5 5 7-7-2-2z" fill="white" opacity="0.9"/>
-                </svg>
-            </div>
-            <div class="logo-text">
-                <span class="logo-name">Secure<span style="color:#A5B4FC">TS</span></span>
-                <span class="logo-sub">ThreatShield</span>
-            </div>
+            <img src="{{ asset('images/securets-logo.png') }}" alt="SecureThreatShield Logo">
         </div>
 
         <h1 class="page-title">Please Log in to your account.</h1>

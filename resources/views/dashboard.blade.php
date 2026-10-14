@@ -40,17 +40,8 @@
             top: 0;
             z-index: 100;
         }
-        .nav-logo { display: flex; align-items: center; gap: 10px; }
-        .hexagon {
-            width: 32px; height: 32px;
-            background: var(--brand-blue);
-            clip-path: polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
-            display: flex; align-items: center; justify-content: center;
-        }
-        .shield-svg { width: 26px; height: 30px; }
-        .logo-text { display: flex; flex-direction: column; line-height: 1; }
-        .logo-name { font-size: 16px; font-weight: 700; color: #fff; }
-        .logo-sub  { font-size: 9px;  font-weight: 500; color: var(--text-muted); margin-top: 1px; }
+        .nav-logo { display: flex; align-items: center; }
+        .nav-logo img { height: 38px; width: auto; }
 
         .nav-right { display: flex; align-items: center; gap: 14px; }
         .user-badge {
@@ -148,22 +139,7 @@
 <!-- ── Navbar ── -->
 <nav>
     <div class="nav-logo">
-        <div class="hexagon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                <path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/>
-            </svg>
-        </div>
-        <svg class="shield-svg" viewBox="0 0 36 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18 0L0 7v13c0 11 7.5 20.9 18 24 10.5-3.1 18-13 18-24V7L18 0z" fill="#1E293B"/>
-            <path d="M18 0L0 7v13h18V0z" fill="#C0392B"/>
-            <path d="M18 0L36 7v13H18V0z" fill="#ECF0F1"/>
-            <path d="M18 20H0v13c0 0 7.5 7 18 7V20z" fill="#27AE60"/>
-            <path d="M18 20H36v13c0 0-7.5 7-18 7V20z" fill="#2980B9"/>
-        </svg>
-        <div class="logo-text">
-            <span class="logo-name">Secure<span style="color:#818CF8">TS</span></span>
-            <span class="logo-sub">ThreatShield</span>
-        </div>
+        <img src="{{ asset('images/securets-logo.png') }}" alt="SecureThreatShield Logo">
     </div>
 
     <div class="nav-right">
