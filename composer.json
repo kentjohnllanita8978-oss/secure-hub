@@ -9,6 +9,7 @@
     ],
     "license": "MIT",
     "require": {
+        "laravel/sanctum": "^4.0",
         "php": "^8.3",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
@@ -46,6 +47,7 @@
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
+            "php artisan package:discover --ansi",
             "npm install",
             "npm run build"
         ],

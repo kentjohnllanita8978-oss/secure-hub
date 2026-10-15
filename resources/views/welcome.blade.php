@@ -78,10 +78,8 @@
             border-bottom: 1px solid var(--brand-border);
             position: sticky; top: 0; z-index: 100;
         }
-        .nav-logo { display: flex; align-items: center; gap: 8px; }
-        .nav-logo .hexagon { width: 30px; height: 30px; }
-        .nav-logo .brand-name { font-size: 16px; color: white; }
-        .nav-logo .brand-sub  { font-size: 9px; color: var(--text-muted); }
+        .nav-logo { display: flex; align-items: center; }
+        .nav-logo img { height: 36px; width: auto; }
         .nav-links { display: flex; align-items: center; gap: 28px; }
         .nav-links a {
             color: var(--text-muted); font-size: 14px; font-weight: 500;
@@ -178,30 +176,8 @@
     {{-- ═══════════════════════════════ SPLASH SCREEN ═══════════════════════════════ --}}
     <div id="splash">
         <div class="splash-logo">
-            <div class="splash-logo-row">
-                <div class="splash-logo-icon">
-                    {{-- Hexagon lock --}}
-                    <div class="hexagon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/>
-                        </svg>
-                    </div>
-                    {{-- Shield --}}
-                    <svg class="shield-icon" viewBox="0 0 36 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M18 0L0 7v13c0 11 7.5 20.9 18 24 10.5-3.1 18-13 18-24V7L18 0z" fill="#1E293B"/>
-                        <path d="M18 0L0 7v13h18V0z" fill="#C0392B"/>
-                        <path d="M18 7L0 7v13h18V7z" fill="#E74C3C" opacity="0.3"/>
-                        <path d="M18 0L36 7v13H18V0z" fill="#ECF0F1"/>
-                        <path d="M18 20H0v13c0 0 7.5 7 18 7V20z" fill="#27AE60"/>
-                        <path d="M18 20H36v13c0 0-7.5 7-18 7V20z" fill="#2980B9"/>
-                        <path d="M14 14l-4 4 6 6 10-10-2-2-8 8-4-4-2 2 6 6 10-10-2-2z" fill="white" opacity="0.8"/>
-                    </svg>
-                </div>
-                <div class="brand-text-wrap">
-                    <span class="brand-name">Secure<span style="color:#1E3A8A">TS</span></span>
-                    <span class="brand-sub">ThreatShield</span>
-                </div>
-            </div>
+            <img src="/images/securets-logo.png" alt="SecureThreatShield Logo"
+                 style="height:90px;width:auto;filter:drop-shadow(0 4px 24px rgba(61,90,241,0.5));">
         </div>
     </div>
 
@@ -211,22 +187,7 @@
         {{-- NAVBAR --}}
         <nav>
             <div class="nav-logo">
-                <div class="hexagon" style="width:30px;height:30px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
-                        <path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/>
-                    </svg>
-                </div>
-                <svg width="26" height="30" viewBox="0 0 36 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18 0L0 7v13c0 11 7.5 20.9 18 24 10.5-3.1 18-13 18-24V7L18 0z" fill="#1E293B"/>
-                    <path d="M18 0L0 7v13h18V0z" fill="#C0392B"/>
-                    <path d="M18 0L36 7v13H18V0z" fill="#ECF0F1"/>
-                    <path d="M18 20H0v13c0 0 7.5 7 18 7V20z" fill="#27AE60"/>
-                    <path d="M18 20H36v13c0 0-7.5 7-18 7V20z" fill="#2980B9"/>
-                </svg>
-                <div class="brand-text-wrap">
-                    <span class="brand-name" style="font-size:15px;color:white;">Secure<span style="color:var(--brand-blue)">TS</span></span>
-                    <span class="brand-sub" style="color:var(--text-muted);font-size:8px;">ThreatShield</span>
-                </div>
+                <img src="/images/securets-logo.png" alt="SecureThreatShield Logo">
             </div>
 
             <div class="nav-links">
@@ -243,7 +204,7 @@
                     </svg>
                     <input type="text" placeholder="Search keyword...">
                 </div>
-                <button class="btn-signin" id="signInBtn">SIGN IN</button>
+                <a href="{{ route('login') }}" class="btn-signin" id="signInBtn" style="text-decoration:none;display:inline-flex;align-items:center;">SIGN IN</a>
             </div>
         </nav>
 
