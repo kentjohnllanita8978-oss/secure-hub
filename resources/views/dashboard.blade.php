@@ -43,6 +43,15 @@
         .nav-logo { display: flex; align-items: center; }
         .nav-logo img { height: 38px; width: auto; }
 
+        .nav-links { display: flex; align-items: center; gap: 4px; }
+        .nav-links a {
+            color: var(--text-muted); font-size: 14px; font-weight: 500;
+            text-decoration: none; padding: 7px 16px; border-radius: 8px;
+            transition: background 0.2s, color 0.2s;
+        }
+        .nav-links a:hover  { background: var(--brand-mid); color: var(--text-primary); }
+        .nav-links a.active { background: rgba(61,90,241,0.15); color: #818CF8; }
+
         .nav-right { display: flex; align-items: center; gap: 14px; }
         .user-badge {
             display: flex; align-items: center; gap: 8px;
@@ -142,6 +151,11 @@
         <img src="{{ asset('images/securets-logo.png') }}" alt="SecureThreatShield Logo">
     </div>
 
+    <div class="nav-links">
+        <a href="{{ route('dashboard') }}" class="active">Dashboard</a>
+        <a href="{{ route('integrations') }}">Integration Hub</a>
+    </div>
+
     <div class="nav-right">
         <div class="user-badge">
             <div class="user-avatar">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
@@ -193,6 +207,20 @@
             <p>ThreatShield is actively monitoring your account. No threats detected.</p>
         </div>
     </div>
+
+    <a href="{{ route('integrations') }}" class="status-panel" style="text-decoration:none;color:inherit;margin-top:16px;display:flex">
+        <div class="status-icon" style="background:rgba(61,90,241,0.12)">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818CF8" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+        </div>
+        <div class="status-text">
+            <h2>Integration Hub</h2>
+            <p>Connect an external app’s login page, get a secret key, and manage apps for this account. Approve or decline logins on the mobile app.</p>
+        </div>
+    </a>
 </div>
 
 </body>

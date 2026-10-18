@@ -2,11 +2,15 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-// NOTE: For local development on physical devices or emulators:
-// - Physical device / Expo Go: Replace with your PC LAN IP (e.g., http://192.168.1.50:8000/api)
-// - Android Emulator: http://10.0.2.2:8000/api
-// - iOS Simulator / Web: http://localhost:8000/api or http://127.0.0.1:8000/api
-export const API_BASE_URL = 'http://127.0.0.1:8000/api';
+// API base URL — set EXPO_PUBLIC_API_URL in mobile/.env
+// Examples:
+//   Local dev (web/iOS sim):    http://127.0.0.1:8000/api
+//   Android emulator:           http://10.0.2.2:8000/api
+//   Physical device (Expo Go):  http://192.168.x.x:8000/api
+//   Production:                 https://yourdomain.com/api
+export const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api';
+
 
 const API = axios.create({
   baseURL: API_BASE_URL,

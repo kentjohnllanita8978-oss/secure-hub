@@ -193,6 +193,7 @@
             <div class="nav-links">
                 <a href="#about">About</a>
                 <a href="#features">Features</a>
+                <a href="{{ route('integrations') }}">Integration Hub</a>
                 <a href="#app">App</a>
                 <a href="#faq">FAQ</a>
             </div>
@@ -204,7 +205,11 @@
                     </svg>
                     <input type="text" placeholder="Search keyword...">
                 </div>
-                <a href="{{ route('login') }}" class="btn-signin" id="signInBtn" style="text-decoration:none;display:inline-flex;align-items:center;">SIGN IN</a>
+                @auth
+                    <a href="{{ route('integrations') }}" class="btn-signin" id="signInBtn" style="text-decoration:none;display:inline-flex;align-items:center;">Integration Hub</a>
+                @else
+                    <a href="{{ route('login') }}" class="btn-signin" id="signInBtn" style="text-decoration:none;display:inline-flex;align-items:center;">SIGN IN</a>
+                @endauth
             </div>
         </nav>
 
@@ -219,7 +224,7 @@
                         <path d="M12 5v14M5 12l7 7 7-7"/>
                     </svg>
                 </button>
-                <button class="btn-try" id="tryBtn">Try it now!</button>
+                <a href="{{ route('integrations') }}" class="btn-try" id="tryBtn" style="text-decoration:none;display:inline-flex;align-items:center;">Try it now!</a>
             </div>
         </section>
 

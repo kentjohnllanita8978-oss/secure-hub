@@ -1,60 +1,81 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import SplashScreen    from './components/SplashScreen';
+import SplashScreen     from './components/SplashScreen';
 import OnboardingScreen from './components/OnboardingScreen';
-import DashboardScreen from './components/DashboardScreen';
+import DashboardScreen  from './components/DashboardScreen';
+import { getStoredToken, setStoredToken } from './src/api/client';
 
 /**
  * App Navigation Flow:
- *   1. SplashScreen (5 seconds, always shown on launch)
- *   2. OnboardingScreen (shown ONCE for new users via AsyncStorage flag)
- *   3. DashboardScreen (main authenticated view)
+ *   1. SplashScreen     – always shown for 5 s on launch
+ *   2. OnboardingScreen – shown ONCE (first launch only)
+ *   3. DashboardScreen  – main tabs, works in guest mode
+ *                         Login is accessed from:
+ *                           • Settings tab  (Sign In button when guest)
+ *                           • Floating LoginModal on Integration / Alerts tabs
  */
 export default function App() {
-  const [phase, setPhase] = useState('splash'); // 'splash' | 'onboarding' | 'dashboard'
+  // 'splash' | 'onboarding' | 'main'
+  const [phase, setPhase] = useState('splash');
+  const [user,  setUser]  = useState(null);
+  const [activeTab, setActiveTab] = useState('dashboard');
 
-  // After splash, decide where to go
+  // ── After splash ─────────────────────────────────────────────────────────────
   const handleSplashFinish = async () => {
     try {
-      const done = await AsyncStorage.getItem('onboarding_complete');
-      setPhase(done === 'true' ? 'dashboard' : 'onboarding');
+      // Restore persisted session (if any)
+      const token = await getStoredToken();
+      if (token) {
+        const savedUser = await AsyncStorage.getItem('user_data');
+        if (savedUser) setUser(JSON.parse(savedUser));
+      }
+      // Show onboarding on first ever launch
+      const onboardingDone = await AsyncStorage.getItem('onboarding_complete');
+      setPhase(onboardingDone === 'true' ? 'main' : 'onboarding');
     } catch (_) {
-      setPhase('onboarding');
+      setPhase('main');
     }
   };
 
-  const handleOnboardingFinish = () => {
-    setPhase('dashboard');
+  // ── After onboarding ─────────────────────────────────────────────────────────
+  const handleOnboardingFinish = () => setPhase('main');
+
+  // ── Called by LoginModal / SettingsScreen after successful Sanctum login ──────
+  const handleLoginSuccess = async (userData) => {
+    setUser(userData);
+    try { await AsyncStorage.setItem('user_data', JSON.stringify(userData)); } catch (_) {}
   };
 
+  // ── Logout ───────────────────────────────────────────────────────────────────
   const handleLogout = async () => {
     try {
-      // Clear onboarding flag so new user flow can restart if needed
-      await AsyncStorage.removeItem('onboarding_complete');
-    } catch (_) { /* ignore */ }
-    setPhase('onboarding');
+      await setStoredToken(null);
+      await AsyncStorage.removeItem('user_data');
+    } catch (_) {}
+    setUser(null);
+    setActiveTab('dashboard');
   };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
 
-      {/* Phase: Splash (always on top during 5s) */}
       {phase === 'splash' && (
         <SplashScreen onFinish={handleSplashFinish} />
       )}
 
-      {/* Phase: Onboarding (first time only) */}
       {phase === 'onboarding' && (
         <OnboardingScreen onFinish={handleOnboardingFinish} />
       )}
 
-      {/* Phase: Dashboard */}
-      {phase === 'dashboard' && (
+      {phase === 'main' && (
         <DashboardScreen
-          user={null}
+          user={user}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onLoginSuccess={handleLoginSuccess}
           onLogout={handleLogout}
         />
       )}
@@ -63,8 +84,5 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0A0F1E',
-  },
+  container: { flex: 1, backgroundColor: '#0A0F1E' },
 });

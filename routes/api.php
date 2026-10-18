@@ -1,22 +1,44 @@
 <?php
 
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\DataController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\IntegrationController;
+use App\Http\Controllers\MobileAuthController;
 use Illuminate\Support\Facades\Route;
 
-// Public API Routes
-Route::post('/login', [AuthController::class, 'login']);
+// ── Mobile Auth (public) ──────────────────────────────────────────────────────
+Route::prefix('mobile')->group(function () {
+    Route::post('/login',  [MobileAuthController::class, 'login']);
+});
 
-// Protected API Routes (Sanctum Token Guard)
+// ── Target App (secret key, not the user's Sanctum token) ─────────────────────
+Route::post('/integrations/login-event', [IntegrationController::class, 'publicLoginEvent']);
+Route::get('/login-events/{event}', [IntegrationController::class, 'publicEventStatus'])
+    ->whereNumber('event');
+
+// ── Authenticated API routes (Sanctum token) ──────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user-profile', function (Request $request) {
-        return response()->json([
-            'status' => 'success',
-            'user' => $request->user(),
-        ]);
-    });
 
-    Route::get('/dashboard-data', [DataController::class, 'dashboard']);
-    Route::post('/logout', [AuthController::class, 'logout']);
+    // Auth
+    Route::post('/mobile/logout', [MobileAuthController::class, 'logout']);
+    Route::get('/mobile/me',      [MobileAuthController::class, 'me']);
+
+    // Integrations CRUD
+    Route::get('/integrations',                    [IntegrationController::class, 'index']);
+    Route::post('/integrations',                   [IntegrationController::class, 'store']);
+    Route::delete('/integrations/{integration}',   [IntegrationController::class, 'destroy']);
+    Route::patch('/integrations/{integration}/toggle', [IntegrationController::class, 'toggle']);
+
+    // TOTP code for a specific integration
+    Route::get('/integrations/{integration}/totp', [IntegrationController::class, 'totpCode']);
+
+    // Login events (called by external app or simulator)
+    Route::post('/integrations/{integration}/login-event', [IntegrationController::class, 'loginEvent']);
+    Route::patch('/login-events/{event}/respond',          [IntegrationController::class, 'respondToEvent']);
+    Route::get('/login-events',                            [IntegrationController::class, 'history']);
+    Route::get('/login-events/pending',                    [IntegrationController::class, 'pendingApprovals']);
+
+    // Devices (Expo push tokens)
+    Route::post('/devices',              [DeviceController::class, 'register']);
+    Route::get('/devices',               [DeviceController::class, 'index']);
+    Route::delete('/devices/{device}',   [DeviceController::class, 'destroy']);
 });
