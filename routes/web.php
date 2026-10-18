@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\IntegrationController;
 use Illuminate\Support\Facades\Route;
 
 // ── Landing page ──────────────────────────────────────────────────────────────
@@ -17,12 +18,30 @@ Route::post('/register',[AuthController::class, 'register']);
 
 Route::post('/logout',  [AuthController::class, 'logout'])->name('logout');
 
+// Public login gate for a linked app (uses gate_token, not the TOTP secret)
+Route::get('/i/{integration:gate_token}', [IntegrationController::class, 'gateShow'])->name('gate.show');
+Route::post('/i/{integration:gate_token}', [IntegrationController::class, 'gateAttempt'])->name('gate.attempt');
+Route::get('/i/{integration:gate_token}/events/{event}', [IntegrationController::class, 'gateEventStatus'])->name('gate.event');
+
 // ── Protected routes ──────────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard',    [AuthController::class, 'dashboard'])->name('dashboard');
+    Route::get('/integrations', [IntegrationController::class, 'webIndex'])->name('integrations');
+
+    // ── Web-only JSON endpoints (session-authenticated, used by integrations.blade.php) ──
+    Route::prefix('web')->group(function () {
+        // Integrations CRUD
+        Route::post('/integrations',                           [IntegrationController::class, 'store']);
+        Route::delete('/integrations/{integration}',           [IntegrationController::class, 'destroy']);
+        Route::patch('/integrations/{integration}/toggle',     [IntegrationController::class, 'toggle']);
+        Route::get('/integrations/{integration}/totp',         [IntegrationController::class, 'totpCode']);
+
+        // Read-only history on web. Approve / decline stays on the mobile app.
+        Route::get('/login-events',                            [IntegrationController::class, 'history']);
+    });
 });
 
-// ── REST API endpoints for React Native mobile client ─────────────────────────
+// ── Public API endpoints (status / health) ────────────────────────────────────
 Route::prefix('api')->group(function () {
     Route::get('/status', function () {
         return response()->json([
