@@ -1,6 +1,6 @@
 # SecureTS
 
-SecureTS is a Laravel and Livewire prototype for passwordless, dual-device authentication. Users start a sign-in request on desktop and approve it from a trusted mobile device.
+SecureTS is a Laravel and Livewire prototype for passwordless, dual-device authentication. Users start a sign-in request on desktop and approve it from a trusted mobile device. (Not Finished and probably need to change)
 
 ## What’s included
 
@@ -37,8 +37,16 @@ SecureTS is a Laravel and Livewire prototype for passwordless, dual-device authe
    php artisan serve
    npm run dev
    ```
+   Then open `http://localhost:8000` in your browser.
 
-Open `http://localhost:8000` in your browser.
+5. For Mobile, run: 
+
+   ```bash
+   cd mobile
+   npx expo start
+   ```
+
+
 
 ## Useful commands
 
