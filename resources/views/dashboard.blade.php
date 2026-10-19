@@ -53,29 +53,139 @@
         .nav-links a.active { background: rgba(61,90,241,0.15); color: #818CF8; }
 
         .nav-right { display: flex; align-items: center; gap: 14px; }
-        .user-badge {
-            display: flex; align-items: center; gap: 8px;
-            font-size: 14px; color: var(--text-muted);
-        }
         .user-avatar {
             width: 34px; height: 34px; border-radius: 50%;
             background: var(--brand-blue);
             display: flex; align-items: center; justify-content: center;
             font-size: 13px; font-weight: 700; color: #fff;
-        }
-        .btn-logout {
-            background: transparent;
-            border: 1.5px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-muted);
+            border: 0;
             cursor: pointer;
             font-family: 'Inter', sans-serif;
-            transition: border-color 0.2s, color 0.2s;
+            transition: box-shadow 0.2s, transform 0.2s;
         }
-        .btn-logout:hover { border-color: #FC8181; color: #FC8181; }
+        .user-avatar:hover, .user-avatar:focus-visible {
+            box-shadow: 0 0 0 4px rgba(61,90,241,0.24);
+            transform: translateY(-1px);
+        }
+
+        /* ── Floating profile window ── */
+        .profile-window {
+            position: fixed;
+            top: 76px;
+            right: 28px;
+            z-index: 200;
+            width: min(360px, calc(100vw - 32px));
+            background: #111A2D;
+            border: 1px solid rgba(129,140,248,0.24);
+            border-radius: 16px;
+            box-shadow: 0 24px 70px rgba(0,0,0,0.45);
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-10px) scale(0.98);
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .profile-window.is-open {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+        .profile-window.is-maximized {
+            top: 80px;
+            right: 28px;
+            bottom: 28px;
+            width: min(640px, calc(100vw - 56px));
+        }
+        .profile-window.is-minimized {
+            width: 220px;
+            bottom: auto;
+        }
+        .profile-window.is-minimized .profile-body,
+        .profile-window.is-minimized .profile-window-footer { display: none; }
+        .profile-back {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            color: var(--text-muted);
+            background: transparent;
+            border: 0;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+        .profile-back:hover, .profile-back:focus-visible {
+            color: var(--text-primary);
+            background: var(--brand-mid);
+        }
+        .profile-body { padding: 20px; }
+        .profile-summary {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding-bottom: 18px;
+            margin-bottom: 14px;
+            border-bottom: 1px solid var(--brand-border);
+        }
+        .profile-large-avatar {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: var(--brand-blue);
+            color: #fff;
+            font-size: 18px;
+            font-weight: 800;
+        }
+        .profile-summary h2 { font-size: 16px; margin-bottom: 4px; }
+        .profile-summary p, .profile-detail-label { color: var(--text-muted); font-size: 12px; }
+        .profile-detail { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
+        .profile-detail-value { font-size: 14px; color: var(--text-primary); word-break: break-word; }
+        .profile-actions { display: grid; gap: 8px; }
+        .profile-action, .sign-out-button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 13px;
+            border: 1px solid var(--brand-border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.03);
+            font: inherit;
+            font-size: 13px;
+            text-align: left;
+            cursor: pointer;
+        }
+        .profile-action:hover, .profile-action:focus-visible { background: var(--brand-mid); }
+        .sign-out-button {
+            justify-content: center;
+            margin-top: 18px;
+            background: rgba(239,68,68,0.14);
+            border-color: rgba(248,113,113,0.35);
+            color: #FCA5A5;
+            font-weight: 700;
+            text-align: center;
+        }
+        .sign-out-button:hover, .sign-out-button:focus-visible { background: rgba(239,68,68,0.24); }
+        .profile-view[hidden] { display: none; }
+        .profile-view-header { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+        .profile-view-header h2 { font-size: 16px; }
+        .settings-note { color: var(--text-muted); font-size: 13px; line-height: 1.6; }
+        .profile-window-footer { padding: 0 20px 20px; color: var(--text-muted); font-size: 11px; }
+
+        @media (max-width: 640px) {
+            nav { padding: 0 18px; }
+            .nav-links { gap: 0; }
+            .nav-links a { padding: 7px 9px; font-size: 12px; }
+            .content { padding: 36px 18px; }
+            .profile-window { top: 70px; right: 16px; }
+            .profile-window.is-maximized { top: 70px; right: 16px; bottom: 16px; width: calc(100vw - 32px); }
+        }
 
         /* ── Content ── */
         .content { padding: 48px 40px; max-width: 1100px; margin: 0 auto; }
@@ -153,25 +263,74 @@
 
     <div class="nav-links">
         <a href="{{ route('dashboard') }}" class="active">Dashboard</a>
-        <a href="{{ route('integrations') }}">Integration Hub</a>
+        <a href="{{ route('integrations') }}">Integrations</a>
     </div>
 
     <div class="nav-right">
-        <div class="user-badge">
-            <div class="user-avatar">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
-            <span>{{ Auth::user()->name }}</span>
-        </div>
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="btn-logout">Logout</button>
-        </form>
+        <button type="button" class="user-avatar" id="profile-trigger" aria-label="Open profile" aria-expanded="false">
+            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+        </button>
     </div>
 </nav>
+
+<aside class="profile-window" id="profile-window" aria-label="Profile window" aria-hidden="true">
+    <div class="profile-body">
+        <section class="profile-view" id="profile-home-view">
+            <div class="profile-summary">
+                <div class="profile-large-avatar">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
+                <div>
+                    <h2>{{ Auth::user()->name }}</h2>
+                    <p>SecureThreatShield account</p>
+                </div>
+            </div>
+            <div class="profile-detail">
+                <span class="profile-detail-label">Email address</span>
+                <span class="profile-detail-value">{{ Auth::user()->email }}</span>
+            </div>
+            <div class="profile-actions">
+                <button type="button" class="profile-action" data-profile-view="profile">
+                    <span>Profile details</span>
+                    <span aria-hidden="true">›</span>
+                </button>
+                <button type="button" class="profile-action" data-profile-view="settings">
+                    <span>Settings</span>
+                    <span aria-hidden="true">›</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="sign-out-button">Sign out</button>
+            </form>
+        </section>
+
+        <section class="profile-view" id="profile-details-view" hidden>
+            <div class="profile-view-header">
+                <button type="button" class="profile-back" data-profile-back aria-label="Return to account menu" title="Back">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
+                </button>
+                <h2>Profile details</h2>
+            </div>
+            <div class="profile-detail"><span class="profile-detail-label">Name</span><span class="profile-detail-value">{{ Auth::user()->name }}</span></div>
+            <div class="profile-detail"><span class="profile-detail-label">Email address</span><span class="profile-detail-value">{{ Auth::user()->email }}</span></div>
+        </section>
+
+        <section class="profile-view" id="profile-settings-view" hidden>
+            <div class="profile-view-header">
+                <button type="button" class="profile-back" data-profile-back aria-label="Return to account menu" title="Back">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
+                </button>
+                <h2>Settings</h2>
+            </div>
+            <p class="settings-note">Settings are coming soon. Use the return icon to go back to your account menu.</p>
+        </section>
+    </div>
+    <div class="profile-window-footer">Account controls</div>
+</aside>
 
 <!-- ── Main Content ── -->
 <div class="content">
     <div class="page-header">
-        <h1>Welcome back, {{ Auth::user()->name }}! 👋</h1>
+        <h1>Welcome to your dashboard! 👋</h1>
         <p>Here's your SecureThreatShield protection overview.</p>
     </div>
 
@@ -222,6 +381,47 @@
         </div>
     </a>
 </div>
+
+<script>
+    (() => {
+        const trigger = document.getElementById('profile-trigger');
+        const profileWindow = document.getElementById('profile-window');
+        const homeView = document.getElementById('profile-home-view');
+        const views = {
+            profile: document.getElementById('profile-details-view'),
+            settings: document.getElementById('profile-settings-view'),
+        };
+
+        const showView = (viewName) => {
+            homeView.hidden = viewName !== 'home';
+            Object.entries(views).forEach(([name, view]) => { view.hidden = name !== viewName; });
+        };
+
+        const closeWindow = () => {
+            profileWindow.classList.remove('is-open');
+            trigger.setAttribute('aria-expanded', 'false');
+            profileWindow.setAttribute('aria-hidden', 'true');
+            showView('home');
+        };
+
+        trigger.addEventListener('click', () => {
+            const isOpen = profileWindow.classList.toggle('is-open');
+            trigger.setAttribute('aria-expanded', String(isOpen));
+            profileWindow.setAttribute('aria-hidden', String(!isOpen));
+        });
+
+        document.querySelectorAll('[data-profile-view]').forEach((button) => {
+            button.addEventListener('click', () => showView(button.dataset.profileView));
+        });
+        document.querySelectorAll('[data-profile-back]').forEach((button) => {
+            button.addEventListener('click', () => showView('home'));
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!profileWindow.contains(event.target) && !trigger.contains(event.target)) closeWindow();
+        });
+    })();
+</script>
 
 </body>
 </html>
