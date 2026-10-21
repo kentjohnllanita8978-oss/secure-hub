@@ -27,6 +27,8 @@ Route::get('/i/{integration:gate_token}/events/{event}', [IntegrationController:
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard',    [AuthController::class, 'dashboard'])->name('dashboard');
     Route::get('/integrations', [IntegrationController::class, 'webIndex'])->name('integrations');
+    Route::get('/profile',      [AuthController::class, 'profile'])->name('profile');
+    Route::get('/settings',     [AuthController::class, 'settings'])->name('settings');
 
     // ── Web-only JSON endpoints (session-authenticated, used by integrations.blade.php) ──
     Route::prefix('web')->group(function () {

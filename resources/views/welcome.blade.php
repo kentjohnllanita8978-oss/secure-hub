@@ -78,8 +78,12 @@
             border-bottom: 1px solid var(--brand-border);
             position: sticky; top: 0; z-index: 100;
         }
-        .nav-logo { display: flex; align-items: center; }
-        .nav-logo img { height: 36px; width: auto; }
+        .nav-logo {
+            display: flex; align-items: center;
+            padding: 4px 8px; border-radius: 9px;
+            background: var(--brand-blue);
+        }
+        .nav-logo img { display: block; height: 36px; width: auto; }
         .nav-links { display: flex; align-items: center; gap: 28px; }
         .nav-links a {
             color: var(--text-muted); font-size: 14px; font-weight: 500;
