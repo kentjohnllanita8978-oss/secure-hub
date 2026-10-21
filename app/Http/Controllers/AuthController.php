@@ -68,6 +68,16 @@ class AuthController extends Controller
         return view('dashboard');
     }
 
+    public function profile()
+    {
+        return view('account.profile');
+    }
+
+    public function settings()
+    {
+        return view('account.settings');
+    }
+
     // ── Logout ────────────────────────────────────────────────
     public function logout(Request $request)
     {

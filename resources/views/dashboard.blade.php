@@ -27,46 +27,7 @@
             min-height: 100vh;
         }
 
-        /* ── Navbar ── */
-        nav {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 32px;
-            height: 64px;
-            background: #0A0F1E;
-            border-bottom: 1px solid var(--brand-border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .nav-logo { display: flex; align-items: center; }
-        .nav-logo img { height: 38px; width: auto; }
-
-        .nav-links { display: flex; align-items: center; gap: 4px; }
-        .nav-links a {
-            color: var(--text-muted); font-size: 14px; font-weight: 500;
-            text-decoration: none; padding: 7px 16px; border-radius: 8px;
-            transition: background 0.2s, color 0.2s;
-        }
-        .nav-links a:hover  { background: var(--brand-mid); color: var(--text-primary); }
-        .nav-links a.active { background: rgba(61,90,241,0.15); color: #818CF8; }
-
-        .nav-right { display: flex; align-items: center; gap: 14px; }
-        .user-avatar {
-            width: 34px; height: 34px; border-radius: 50%;
-            background: var(--brand-blue);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 13px; font-weight: 700; color: #fff;
-            border: 0;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            transition: box-shadow 0.2s, transform 0.2s;
-        }
-        .user-avatar:hover, .user-avatar:focus-visible {
-            box-shadow: 0 0 0 4px rgba(61,90,241,0.24);
-            transform: translateY(-1px);
-        }
+        @include('account.navigation-styles')
 
         /* ── Floating profile window ── */
         .profile-window {
@@ -161,6 +122,7 @@
             text-align: left;
             cursor: pointer;
         }
+        .profile-action { text-decoration: none; }
         .profile-action:hover, .profile-action:focus-visible { background: var(--brand-mid); }
         .sign-out-button {
             justify-content: center;
@@ -179,9 +141,6 @@
         .profile-window-footer { padding: 0 20px 20px; color: var(--text-muted); font-size: 11px; }
 
         @media (max-width: 640px) {
-            nav { padding: 0 18px; }
-            .nav-links { gap: 0; }
-            .nav-links a { padding: 7px 9px; font-size: 12px; }
             .content { padding: 36px 18px; }
             .profile-window { top: 70px; right: 16px; }
             .profile-window.is-maximized { top: 70px; right: 16px; bottom: 16px; width: calc(100vw - 32px); }
@@ -256,22 +215,7 @@
 <body>
 
 <!-- ── Navbar ── -->
-<nav>
-    <div class="nav-logo">
-        <img src="{{ asset('images/securets-logo.png') }}" alt="SecureThreatShield Logo">
-    </div>
-
-    <div class="nav-links">
-        <a href="{{ route('dashboard') }}" class="active">Dashboard</a>
-        <a href="{{ route('integrations') }}">Integrations</a>
-    </div>
-
-    <div class="nav-right">
-        <button type="button" class="user-avatar" id="profile-trigger" aria-label="Open profile" aria-expanded="false">
-            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-        </button>
-    </div>
-</nav>
+@include('account.navigation', ['activeNav' => 'dashboard'])
 
 <aside class="profile-window" id="profile-window" aria-label="Profile window" aria-hidden="true">
     <div class="profile-body">
@@ -288,14 +232,14 @@
                 <span class="profile-detail-value">{{ Auth::user()->email }}</span>
             </div>
             <div class="profile-actions">
-                <button type="button" class="profile-action" data-profile-view="profile">
+                <a href="{{ route('profile') }}" class="profile-action">
                     <span>Profile details</span>
                     <span aria-hidden="true">›</span>
-                </button>
-                <button type="button" class="profile-action" data-profile-view="settings">
+                </a>
+                <a href="{{ route('settings') }}" class="profile-action">
                     <span>Settings</span>
                     <span aria-hidden="true">›</span>
-                </button>
+                </a>
             </div>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
