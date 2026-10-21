@@ -45,7 +45,7 @@ export default function NotificationScreen() {
         load();
         const interval = setInterval(() => {
             integrationApi.pending().then(r => setPending(r.data)).catch(() => {});
-        }, 15000);
+        }, 4000);
         return () => clearInterval(interval);
     }, [load]);
 
@@ -123,6 +123,13 @@ export default function NotificationScreen() {
                         <Text style={styles.badgeDotText}>{pending.length}</Text>
                     </View>
                 )}
+                <View style={{ flex: 1 }} />
+                <TouchableOpacity
+                    style={styles.refreshBtn}
+                    onPress={() => { setRefreshing(true); load(); }}
+                >
+                    <Text style={styles.refreshBtnText}>Refresh</Text>
+                </TouchableOpacity>
             </View>
 
             {/* Tabs */}
@@ -190,6 +197,17 @@ const styles = StyleSheet.create({
         paddingHorizontal: 7, paddingVertical: 2,
     },
     badgeDotText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+    refreshBtn: {
+        backgroundColor: 'rgba(255,255,255,0.08)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+    },
+    refreshBtnText: {
+        color: COLORS.text,
+        fontSize: 13,
+        fontWeight: '600',
+    },
     tabs: { flexDirection: 'row', padding: 12, gap: 8 },
     tabBtn: { flex: 1, paddingVertical: 9, borderRadius: 8, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)' },
     tabBtnActive: { backgroundColor: 'rgba(61,90,241,0.15)' },

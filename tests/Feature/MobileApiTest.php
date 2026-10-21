@@ -10,52 +10,73 @@ class MobileApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_mobile_user_can_login_and_receive_sanctum_token(): void
+    public function test_mobile_clients_can_log_in_through_current_and_legacy_paths(): void
     {
-        $user = User::factory()->create([
+        User::factory()->create([
             'email' => 'mobile@securets.com',
             'password' => bcrypt('secret123'),
         ]);
 
-        $response = $this->postJson('/api/login', [
+        foreach (['/api/mobile/login', '/api/login'] as $path) {
+            $response = $this->postJson($path, [
+                'email' => 'mobile@securets.com',
+                'password' => 'secret123',
+                'device_name' => 'iphone_15_pro',
+            ]);
+
+            $response->assertOk()
+                ->assertJsonStructure([
+                    'token',
+                    'expires_at',
+                    'expires_in_minutes',
+                    'user' => ['id', 'name', 'email'],
+                ]);
+
+            $token = $response->json('token');
+
+            $this->withHeader('Authorization', 'Bearer '.$token)
+                ->getJson('/api/mobile/me')
+                ->assertOk()
+                ->assertJson([
+                    'email' => 'mobile@securets.com',
+                ]);
+        }
+    }
+
+    public function test_mobile_login_handles_case_insensitivity_and_formatting(): void
+    {
+        User::factory()->create([
             'email' => 'mobile@securets.com',
-            'password' => 'secret123',
-            'device_name' => 'iphone_15_pro',
+            'password' => bcrypt('secret123'),
         ]);
 
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'status',
-                'token',
-                'user' => ['id', 'name', 'email'],
-            ]);
+        // Test with caps and spaces
+        $response = $this->postJson('/api/mobile/login', [
+            'email' => ' MOBILE@SECURETS.COM ',
+            'password' => 'secret123',
+        ]);
 
-        $token = $response->json('token');
+        $response->assertOk();
+    }
 
-        // Test protected user-profile endpoint with Bearer token
-        $profileResponse = $this->withHeader('Authorization', 'Bearer '.$token)
-            ->getJson('/api/user-profile');
+    public function test_mobile_login_returns_expected_error_format(): void
+    {
+        User::factory()->create([
+            'email' => 'mobile@securets.com',
+            'password' => bcrypt('secret123'),
+        ]);
 
-        $profileResponse->assertStatus(200)
+        $response = $this->postJson('/api/mobile/login', [
+            'email' => 'mobile@securets.com',
+            'password' => 'wrong-password',
+        ]);
+
+        $response->assertStatus(422)
             ->assertJson([
-                'status' => 'success',
-                'user' => [
-                    'email' => 'mobile@securets.com',
-                ],
-            ]);
-
-        // Test protected dashboard-data endpoint
-        $dashboardResponse = $this->withHeader('Authorization', 'Bearer '.$token)
-            ->getJson('/api/dashboard-data');
-
-        $dashboardResponse->assertStatus(200)
-            ->assertJsonStructure([
-                'status',
-                'metrics' => [
-                    'threats_blocked',
-                    'active_shields',
-                    'network_security',
-                ],
+                'message' => 'The provided credentials do not match our records.',
+                'errors' => [
+                    'email' => ['Incorrect email or password.']
+                ]
             ]);
     }
 }

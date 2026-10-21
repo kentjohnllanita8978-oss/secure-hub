@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import SplashScreen     from './components/SplashScreen';
 import OnboardingScreen from './components/OnboardingScreen';
 import DashboardScreen  from './components/DashboardScreen';
-import { getStoredToken, setStoredToken } from './src/api/client';
+import API, { clearStoredSession, getStoredToken } from './src/api/client';
 
 /**
  * App Navigation Flow:
@@ -28,9 +28,18 @@ export default function App() {
       // Restore persisted session (if any)
       const token = await getStoredToken();
       if (token) {
-        const savedUser = await AsyncStorage.getItem('user_data');
-        if (savedUser) setUser(JSON.parse(savedUser));
+        try {
+          const { data } = await API.get('/mobile/me');
+          setUser(data);
+          await AsyncStorage.setItem('user_data', JSON.stringify(data));
+        } catch (_) {
+          await clearStoredSession();
+          await AsyncStorage.removeItem('user_data');
+        }
+      } else {
+        await AsyncStorage.removeItem('user_data');
       }
+
       // Show onboarding on first ever launch
       const onboardingDone = await AsyncStorage.getItem('onboarding_complete');
       setPhase(onboardingDone === 'true' ? 'main' : 'onboarding');
@@ -51,7 +60,11 @@ export default function App() {
   // ── Logout ───────────────────────────────────────────────────────────────────
   const handleLogout = async () => {
     try {
-      await setStoredToken(null);
+      await API.post('/mobile/logout');
+    } catch (_) {}
+
+    try {
+      await clearStoredSession();
       await AsyncStorage.removeItem('user_data');
     } catch (_) {}
     setUser(null);

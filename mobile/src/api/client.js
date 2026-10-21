@@ -11,6 +11,18 @@ import { Platform } from 'react-native';
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api';
 
+export const AUTH_SESSION_MINUTES = Number.parseInt(
+  process.env.EXPO_PUBLIC_AUTH_SESSION_MINUTES ?? '120',
+  10,
+);
+
+export const AUTH_SESSION_LABEL = AUTH_SESSION_MINUTES % 60 === 0
+  ? `${AUTH_SESSION_MINUTES / 60} hour${AUTH_SESSION_MINUTES === 60 ? '' : 's'}`
+  : `${AUTH_SESSION_MINUTES} minutes`;
+
+const TOKEN_KEY = 'user_token';
+const TOKEN_META_KEY = 'user_token_meta';
+
 
 const API = axios.create({
   baseURL: API_BASE_URL,
@@ -21,37 +33,93 @@ const API = axios.create({
   timeout: 10000,
 });
 
-// Helper for cross-platform secure storage (SecureStore for Mobile, localStorage for Web)
-export const getStoredToken = async () => {
+const getStorageItem = async (key) => {
   try {
     if (Platform.OS === 'web') {
-      return localStorage.getItem('user_token');
+      return localStorage.getItem(key);
     }
-    return await SecureStore.getItemAsync('user_token');
+    return await SecureStore.getItemAsync(key);
   } catch (error) {
-    console.error('Error reading auth token:', error);
+    console.error(`Error reading ${key}:`, error);
     return null;
   }
 };
 
-export const setStoredToken = async (token) => {
+const setStorageItem = async (key, value) => {
   try {
     if (Platform.OS === 'web') {
-      if (token) {
-        localStorage.setItem('user_token', token);
-      } else {
-        localStorage.removeItem('user_token');
-      }
+      localStorage.setItem(key, value);
     } else {
-      if (token) {
-        await SecureStore.setItemAsync('user_token', token);
-      } else {
-        await SecureStore.deleteItemAsync('user_token');
-      }
+      await SecureStore.setItemAsync(key, value);
     }
   } catch (error) {
-    console.error('Error saving auth token:', error);
+    console.error(`Error saving ${key}:`, error);
   }
+};
+
+const removeStorageItem = async (key) => {
+  try {
+    if (Platform.OS === 'web') {
+      localStorage.removeItem(key);
+    } else {
+      await SecureStore.deleteItemAsync(key);
+    }
+  } catch (error) {
+    console.error(`Error removing ${key}:`, error);
+  }
+};
+
+export const clearStoredSession = async () => {
+  await removeStorageItem(TOKEN_KEY);
+  await removeStorageItem(TOKEN_META_KEY);
+};
+
+const getStoredTokenMeta = async () => {
+  const raw = await getStorageItem(TOKEN_META_KEY);
+
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    console.error('Error parsing auth token metadata:', error);
+    await clearStoredSession();
+    return null;
+  }
+};
+
+export const getStoredToken = async () => {
+  const token = await getStorageItem(TOKEN_KEY);
+
+  if (!token) {
+    return null;
+  }
+
+  const meta = await getStoredTokenMeta();
+  const expiresAt = meta?.expiresAt ? Date.parse(meta.expiresAt) : NaN;
+
+  if (!meta || Number.isNaN(expiresAt) || expiresAt <= Date.now()) {
+    await clearStoredSession();
+    return null;
+  }
+
+  return token;
+};
+
+export const setStoredToken = async (token, { expiresAt } = {}) => {
+  if (!token) {
+    await clearStoredSession();
+    return;
+  }
+
+  const finalExpiresAt = expiresAt
+    ? new Date(expiresAt).toISOString()
+    : new Date(Date.now() + (AUTH_SESSION_MINUTES * 60 * 1000)).toISOString();
+
+  await setStorageItem(TOKEN_KEY, token);
+  await setStorageItem(TOKEN_META_KEY, JSON.stringify({ expiresAt: finalExpiresAt }));
 };
 
 // Interceptor: Automatically attach Bearer token to all outgoing requests
@@ -64,5 +132,16 @@ API.interceptors.request.use(async (config) => {
 }, (error) => {
   return Promise.reject(error);
 });
+
+API.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error?.response?.status === 401) {
+      await clearStoredSession();
+    }
+
+    return Promise.reject(error);
+  },
+);
 
 export default API;

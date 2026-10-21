@@ -301,7 +301,10 @@ class IntegrationController extends Controller
         ])->values()->toArray();
 
         try {
-            Http::post('https://exp.host/--/api/v2/push/send', $messages);
+            $response = Http::post('https://exp.host/--/api/v2/push/send', $messages);
+            if (!$response->ok()) {
+                Log::error('Expo Push Error: ' . $response->body());
+            }
         } catch (\Throwable $e) {
             Log::warning('Push notification failed: '.$e->getMessage());
         }

@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
-import API, { setStoredToken } from '../src/api/client';
+import API, { AUTH_SESSION_LABEL, setStoredToken } from '../src/api/client';
 
 export default function LoginScreen({ onLoginSuccess }) {
   const [email, setEmail] = useState('admin@securets.com');
@@ -28,14 +28,14 @@ export default function LoginScreen({ onLoginSuccess }) {
     setErrorMessage('');
 
     try {
-      const response = await API.post('/login', {
+      const response = await API.post('/mobile/login', {
         email: email.trim(),
         password,
         device_name: `${Platform.OS}_mobile_app`,
       });
 
       if (response.data && response.data.token) {
-        await setStoredToken(response.data.token);
+        await setStoredToken(response.data.token, { expiresAt: response.data.expires_at });
         if (onLoginSuccess) {
           onLoginSuccess(response.data.user);
         }
@@ -119,6 +119,9 @@ export default function LoginScreen({ onLoginSuccess }) {
         <View style={styles.footerNote}>
           <Text style={styles.footerText}>
             Protected by Laravel Sanctum Bearer Token Auth
+          </Text>
+          <Text style={styles.footerText}>
+            Session stays signed in for up to {AUTH_SESSION_LABEL} after the app closes.
           </Text>
         </View>
       </View>

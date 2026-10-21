@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import * as Notifications from 'expo-notifications';
-import API, { setStoredToken } from '../src/api/client';
+import API, { AUTH_SESSION_LABEL, setStoredToken } from '../src/api/client';
 import { integrationApi } from '../src/api/integrations';
 
 const C = {
@@ -42,12 +42,16 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
         device_name: `${Platform.OS}_mobile_app`,
       });
       if (res.data?.token) {
-        await setStoredToken(res.data.token);
-        onLoginSuccess?.(res.data.user);
+        await setStoredToken(res.data.token, { expiresAt: res.data.expires_at });
+        
+        // ── Clear fields BEFORE success callback ──
         setEmail('');
         setPassword('');
+        setError('');
 
-        // ── Register Expo push token so the backend can send approval notifications ──
+        onLoginSuccess?.(res.data.user);
+
+        // ── Register Expo push token ──
         try {
           const { status: existing } = await Notifications.getPermissionsAsync();
           const finalStatus =
@@ -63,11 +67,12 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
             );
           }
         } catch (_) {
-          // Non-fatal — login already succeeded; push is best-effort
+          // Non-fatal
         }
       }
     } catch (e) {
-      const msg = e.response?.data?.message || 'Incorrect email or password.';
+      console.error('LoginModal Error:', e.response?.data || e.message);
+      const msg = e.response?.data?.message || e.response?.data?.errors?.email?.[0] || 'Incorrect email or password.';
       setError(msg);
     } finally {
       setLoading(false);
@@ -152,6 +157,10 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
             }
           </TouchableOpacity>
 
+          <Text style={styles.sessionNote}>
+            Your SecureTS session stays signed in for up to {AUTH_SESSION_LABEL} after the app closes.
+          </Text>
+
           {/* Cancel */}
           <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
             <Text style={styles.cancelText}>Cancel</Text>
@@ -213,6 +222,13 @@ const styles = StyleSheet.create({
   },
   btnDisabled: { opacity: 0.6 },
   btnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  sessionNote: {
+    color: C.muted,
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginTop: 12,
+  },
 
   cancelBtn: { alignItems: 'center', marginTop: 14, padding: 8 },
   cancelText: { color: C.muted, fontSize: 14 },

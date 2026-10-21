@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ScrollView, StatusBar, Modal,
+  ScrollView, StatusBar, Modal, Pressable,
+  TouchableWithoutFeedback, ActivityIndicator, Alert,
 } from 'react-native';
 
 import IntegrationScreen  from './IntegrationScreen';
@@ -29,7 +30,27 @@ function LogoHeader() {
 }
 
 // ─── Dashboard Home (guest-friendly) ────────────────────────────────────────
-function DashboardHome({ user }) {
+function approvalMeta(event) {
+  const meta = [];
+
+  if (event?.device) {
+    meta.push(event.device);
+  }
+
+  if (event?.ip_address) {
+    meta.push(`IP ${event.ip_address}`);
+  }
+
+  return meta.join(' · ') || 'A protected app is waiting for your response.';
+}
+
+function DashboardHome({
+  user,
+  hiddenApproval,
+  onRestoreApproval,
+  onRespondToApproval,
+  approvalDecision,
+}) {
   return (
     <>
       <View style={styles.welcomeBanner}>
@@ -45,6 +66,51 @@ function DashboardHome({ user }) {
         contentContainerStyle={styles.feedContent}
         showsVerticalScrollIndicator={false}
       >
+        {hiddenApproval && (
+          <View style={styles.homeApprovalCard}>
+            <View style={styles.homeApprovalHeader}>
+              <Text style={styles.homeApprovalEyebrow}>Pending login request</Text>
+              <TouchableOpacity
+                style={styles.homeApprovalReview}
+                onPress={onRestoreApproval}
+                disabled={!!approvalDecision}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.homeApprovalReviewText}>Review</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.homeApprovalApp}>
+              {hiddenApproval.integration?.name ?? 'Linked app'}
+            </Text>
+            <Text style={styles.homeApprovalMeta}>{approvalMeta(hiddenApproval)}</Text>
+            <Text style={styles.homeApprovalText}>
+              This request was closed from the popup. You can still approve or decline it here.
+            </Text>
+            <View style={styles.homeApprovalActions}>
+              <TouchableOpacity
+                style={[styles.homeApprovalBtn, styles.homeApprovalApprove]}
+                onPress={() => onRespondToApproval('approved')}
+                disabled={!!approvalDecision}
+                activeOpacity={0.85}
+              >
+                {approvalDecision === 'approved'
+                  ? <ActivityIndicator color="#4ADE80" size="small" />
+                  : <Text style={styles.homeApprovalApproveText}>Approve</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.homeApprovalBtn, styles.homeApprovalDecline]}
+                onPress={() => onRespondToApproval('declined')}
+                disabled={!!approvalDecision}
+                activeOpacity={0.85}
+              >
+                {approvalDecision === 'declined'
+                  ? <ActivityIndicator color="#F87171" size="small" />
+                  : <Text style={styles.homeApprovalDeclineText}>Decline</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         <View style={styles.emptyState}>
           <Text style={{ fontSize: 52, marginBottom: 14 }}>🛡️</Text>
           <Text style={styles.emptyTitle}>No Alerts</Text>
@@ -57,55 +123,48 @@ function DashboardHome({ user }) {
   );
 }
 
-function ApprovalPopup({ user }) {
-  const [event, setEvent] = useState(null);
-
-  useEffect(() => {
-    if (!user) {
-      setEvent(null);
-      return;
-    }
-    let cancelled = false;
-    const tick = () => {
-      integrationApi.pending()
-        .then((r) => { if (!cancelled) setEvent(r.data?.[0] ?? null); })
-        .catch(() => {});
-    };
-    tick();
-    const id = setInterval(tick, 4000);
-    return () => { cancelled = true; clearInterval(id); };
-  }, [user]);
-
-  const respond = async (decision) => {
-    if (!event) return;
-    try {
-      await integrationApi.respond(event.id, decision);
-      setEvent(null);
-    } catch (_) {}
-  };
-
-  if (!event) return null;
+function ApprovalPopup({
+  visible,
+  event,
+  onDismiss,
+  onRespond,
+  approvalDecision,
+}) {
+  if (!visible || !event) return null;
 
   return (
-    <Modal visible transparent animationType="fade">
-      <View style={styles.popupBackdrop}>
-        <View style={styles.popupCard}>
-          <Text style={styles.popupTitle}>Login request</Text>
-          <Text style={styles.popupApp}>{event.integration?.name ?? 'Linked app'}</Text>
-          <Text style={styles.popupMeta}>
-            {event.device ? event.device + ' · ' : ''}
-            {event.ip_address ? 'IP ' + event.ip_address : ''}
-          </Text>
-          <View style={styles.popupActions}>
-            <TouchableOpacity style={styles.popupApprove} onPress={() => respond('approved')}>
-              <Text style={styles.popupApproveText}>Approve</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.popupDecline} onPress={() => respond('declined')}>
-              <Text style={styles.popupDeclineText}>Decline</Text>
-            </TouchableOpacity>
+    <Modal visible transparent animationType="fade" onRequestClose={onDismiss}>
+      <Pressable style={styles.popupBackdrop} onPress={onDismiss}>
+        <TouchableWithoutFeedback>
+          <View style={styles.popupCard}>
+            <Text style={styles.popupTitle}>Login request</Text>
+            <Text style={styles.popupApp}>{event.integration?.name ?? 'Linked app'}</Text>
+            <Text style={styles.popupMeta}>{approvalMeta(event)}</Text>
+            <View style={styles.popupActions}>
+              <TouchableOpacity
+                style={[styles.popupApprove, approvalDecision && styles.popupActionDisabled]}
+                onPress={() => onRespond('approved')}
+                disabled={!!approvalDecision}
+                activeOpacity={0.85}
+              >
+                {approvalDecision === 'approved'
+                  ? <ActivityIndicator color="#4ADE80" size="small" />
+                  : <Text style={styles.popupApproveText}>Approve</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.popupDecline, approvalDecision && styles.popupActionDisabled]}
+                onPress={() => onRespond('declined')}
+                disabled={!!approvalDecision}
+                activeOpacity={0.85}
+              >
+                {approvalDecision === 'declined'
+                  ? <ActivityIndicator color="#F87171" size="small" />
+                  : <Text style={styles.popupDeclineText}>Decline</Text>}
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </View>
+        </TouchableWithoutFeedback>
+      </Pressable>
     </Modal>
   );
 }
@@ -131,6 +190,11 @@ export default function DashboardScreen({
   user, activeTab, onTabChange, onLoginSuccess, onLogout,
 }) {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
+  const [pendingApproval, setPendingApproval] = useState(null);
+  const [approvalPopupVisible, setApprovalPopupVisible] = useState(false);
+  const [approvalDecision, setApprovalDecision] = useState(null);
+  const pendingApprovalIdRef = useRef(null);
+  const dismissedApprovalIdRef = useRef(null);
 
   const isLoggedIn = !!user;
 
@@ -142,10 +206,107 @@ export default function DashboardScreen({
     onLoginSuccess?.(userData);
   };
 
+  useEffect(() => {
+    if (!user) {
+      pendingApprovalIdRef.current = null;
+      dismissedApprovalIdRef.current = null;
+      setPendingApproval(null);
+      setApprovalPopupVisible(false);
+      setApprovalDecision(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const tick = async () => {
+      try {
+        const response = await integrationApi.pending();
+        if (cancelled) {
+          return;
+        }
+
+        const nextEvent = response.data?.[0] ?? null;
+
+        if (!nextEvent) {
+          pendingApprovalIdRef.current = null;
+          dismissedApprovalIdRef.current = null;
+          setPendingApproval(null);
+          setApprovalPopupVisible(false);
+          return;
+        }
+
+        const isNewEvent = pendingApprovalIdRef.current !== nextEvent.id;
+
+        pendingApprovalIdRef.current = nextEvent.id;
+        setPendingApproval(nextEvent);
+
+        if (isNewEvent) {
+          dismissedApprovalIdRef.current = null;
+          setApprovalPopupVisible(true);
+          return;
+        }
+
+        if (dismissedApprovalIdRef.current !== nextEvent.id) {
+          setApprovalPopupVisible(true);
+        }
+      } catch (_) {
+        // Leave the last known state in place if polling fails.
+      }
+    };
+
+    tick();
+    const id = setInterval(tick, 4000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [user]);
+
+  const dismissApprovalPopup = () => {
+    if (!pendingApproval) return;
+
+    dismissedApprovalIdRef.current = pendingApproval.id;
+    setApprovalPopupVisible(false);
+  };
+
+  const restoreApprovalPopup = () => {
+    if (!pendingApproval) return;
+
+    dismissedApprovalIdRef.current = null;
+    setApprovalPopupVisible(true);
+  };
+
+  const respondToApproval = async (decision) => {
+    if (!pendingApproval || approvalDecision) return;
+
+    setApprovalDecision(decision);
+
+    try {
+      await integrationApi.respond(pendingApproval.id, decision);
+      pendingApprovalIdRef.current = null;
+      dismissedApprovalIdRef.current = null;
+      setPendingApproval(null);
+      setApprovalPopupVisible(false);
+    } catch (_) {
+      Alert.alert('Error', 'Could not submit your response.');
+    } finally {
+      setApprovalDecision(null);
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardHome user={user} />;
+        return (
+          <DashboardHome
+            user={user}
+            hiddenApproval={pendingApproval && !approvalPopupVisible ? pendingApproval : null}
+            onRestoreApproval={restoreApprovalPopup}
+            onRespondToApproval={respondToApproval}
+            approvalDecision={approvalDecision}
+          />
+        );
 
       case 'integrations':
         return isLoggedIn
@@ -220,7 +381,15 @@ export default function DashboardScreen({
         ))}
       </View>
 
-      {isLoggedIn && <ApprovalPopup user={user} />}
+      {isLoggedIn && (
+        <ApprovalPopup
+          visible={approvalPopupVisible}
+          event={pendingApproval}
+          onDismiss={dismissApprovalPopup}
+          onRespond={respondToApproval}
+          approvalDecision={approvalDecision}
+        />
+      )}
 
       {/* ── Floating Login Modal ── */}
       <LoginModal
@@ -276,6 +445,77 @@ const styles = StyleSheet.create({
   emptyState: {
     flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: '25%',
   },
+  homeApprovalCard: {
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: 'rgba(234,179,8,0.3)',
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 18,
+  },
+  homeApprovalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 10,
+  },
+  homeApprovalEyebrow: {
+    color: '#FACC15',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  homeApprovalReview: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: 'rgba(129,140,248,0.14)',
+  },
+  homeApprovalReviewText: {
+    color: '#A5B4FC',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  homeApprovalApp: {
+    color: '#F8FAFC',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  homeApprovalMeta: {
+    color: '#94A3B8',
+    fontSize: 13,
+    marginBottom: 8,
+  },
+  homeApprovalText: {
+    color: '#CBD5E1',
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 14,
+  },
+  homeApprovalActions: { flexDirection: 'row', gap: 10 },
+  homeApprovalBtn: {
+    flex: 1,
+    minHeight: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  homeApprovalApprove: {
+    backgroundColor: 'rgba(34,197,94,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(34,197,94,0.3)',
+  },
+  homeApprovalApproveText: { color: '#4ADE80', fontWeight: '700' },
+  homeApprovalDecline: {
+    backgroundColor: 'rgba(239,68,68,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.3)',
+  },
+  homeApprovalDeclineText: { color: '#F87171', fontWeight: '700' },
   emptyTitle: { color: '#F8FAFC', fontSize: 18, fontWeight: '700', marginBottom: 8 },
   emptyText:  { color: '#64748B', fontSize: 13, textAlign: 'center', lineHeight: 20 },
 
@@ -323,6 +563,7 @@ const styles = StyleSheet.create({
   popupApp: { color: '#F8FAFC', fontSize: 18, fontWeight: '700', marginBottom: 6 },
   popupMeta: { color: '#94A3B8', fontSize: 13, marginBottom: 18 },
   popupActions: { flexDirection: 'row', gap: 8 },
+  popupActionDisabled: { opacity: 0.7 },
   popupApprove: {
     flex: 1, backgroundColor: 'rgba(34,197,94,0.15)', borderWidth: 1,
     borderColor: 'rgba(34,197,94,0.3)', borderRadius: 10, padding: 12, alignItems: 'center',
