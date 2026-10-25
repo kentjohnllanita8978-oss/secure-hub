@@ -50,7 +50,24 @@ function DashboardHome({
   onRestoreApproval,
   onRespondToApproval,
   approvalDecision,
+  onOpenNotifications,
+  onOpenIntegrations,
 }) {
+  const [recentNotifications, setRecentNotifications] = useState([]);
+  const [alertsCount, setAlertsCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchRecent = async () => {
+      try {
+        const res = await integrationApi.history();
+        setRecentNotifications(res.data.slice(0, 3));
+        setAlertsCount(res.data.length);
+      } catch (_) {}
+    };
+    fetchRecent();
+  }, [user]);
+
   return (
     <>
       <View style={styles.welcomeBanner}>
@@ -58,7 +75,7 @@ function DashboardHome({
           {user ? `Welcome, ${user.name || 'User'}! 👋` : 'Welcome to SecureTS 👋'}
         </Text>
         <Text style={styles.welcomeSub}>
-          {user ? 'All linked accounts are protected.' : 'Sign in to activate your Integration Hub.'}
+          {user ? 'All linked accounts are protected.' : 'Sign in to activate your ThreatShield.'}
         </Text>
       </View>
       <ScrollView
@@ -111,13 +128,102 @@ function DashboardHome({
           </View>
         )}
 
-        <View style={styles.emptyState}>
-          <Text style={{ fontSize: 52, marginBottom: 14 }}>🛡️</Text>
-          <Text style={styles.emptyTitle}>No Alerts</Text>
-          <Text style={styles.emptyText}>
-            All systems operational. Login events will appear here once you're connected.
-          </Text>
-        </View>
+        {user && (
+          <>
+            {/* ── Stat cards (matches web dashboard) ── */}
+            <View style={styles.statsGrid}>
+              <View style={[styles.statCard, styles.statBlue]}>
+                <Text style={styles.statLabel}>Protection Status</Text>
+                <Text style={[styles.statValue, { color: '#818CF8' }]}>Active</Text>
+              </View>
+              <View style={[styles.statCard, styles.statGreen]}>
+                <Text style={styles.statLabel}>Threats Blocked</Text>
+                <Text style={[styles.statValue, { color: '#4ADE80' }]}>0</Text>
+              </View>
+              <View style={[styles.statCard, styles.statYellow]}>
+                <Text style={styles.statLabel}>Auth Latency</Text>
+                <Text style={[styles.statValue, { color: '#FACC15' }]}>{'<500ms'}</Text>
+              </View>
+              <View style={[styles.statCard, styles.statRed]}>
+                <Text style={styles.statLabel}>Alerts</Text>
+                <Text style={[styles.statValue, { color: '#F87171' }]}>{alertsCount}</Text>
+              </View>
+            </View>
+
+            {/* ── All Systems Operational panel ── */}
+            <View style={styles.statusPanel}>
+              <View style={styles.statusIconWrap}>
+                <Text style={{ fontSize: 22 }}>🛡️</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.statusTitle}>All Systems Operational</Text>
+                <Text style={styles.statusSub}>
+                  ThreatShield is actively monitoring your account. No threats detected.
+                </Text>
+              </View>
+            </View>
+
+            {/* ── Integration Hub card ── */}
+            <TouchableOpacity
+              style={styles.integrationCard}
+              onPress={onOpenIntegrations}
+              activeOpacity={0.85}
+            >
+              <View style={[styles.statusIconWrap, { backgroundColor: 'rgba(61,90,241,0.12)' }]}>
+                <Text style={{ fontSize: 22 }}>🔗</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.integrationCardTitle}>Integration Hub</Text>
+                <Text style={styles.integrationCardSub}>
+                  Connect external apps, manage credentials, approve or decline logins.
+                </Text>
+              </View>
+              <Text style={{ color: '#94A3B8', fontSize: 22 }}>›</Text>
+            </TouchableOpacity>
+
+            {/* ── Recent Alerts ── */}
+            <View style={styles.summarySection}>
+              <View style={styles.summaryHeader}>
+                <Text style={styles.summaryTitle}>Recent Alerts</Text>
+                <TouchableOpacity onPress={onOpenNotifications}>
+                  <Text style={styles.summaryLink}>View All</Text>
+                </TouchableOpacity>
+              </View>
+              {recentNotifications.length > 0 ? (
+                recentNotifications.map((notif) => (
+                  <TouchableOpacity
+                    key={notif.id}
+                    style={styles.summaryItem}
+                    onPress={onOpenNotifications}
+                  >
+                    <View style={styles.summaryIconWrap}>
+                      <Text style={{ fontSize: 16 }}>{notif.status === 'approved' ? '✅' : notif.status === 'declined' ? '❌' : '🔔'}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.summaryItemTitle}>{notif.integration?.name ?? 'SecureTS Alert'}</Text>
+                      <Text style={styles.summaryItemMeta}>{new Date(notif.created_at).toLocaleTimeString()}</Text>
+                    </View>
+                    <Text style={styles.summaryChevron}>›</Text>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.summaryEmpty}>
+                  <Text style={styles.summaryEmptyText}>No recent activity found.</Text>
+                </View>
+              )}
+            </View>
+          </>
+        )}
+
+        {!user && (
+          <View style={styles.emptyState}>
+            <Text style={{ fontSize: 52, marginBottom: 14 }}>🛡️</Text>
+            <Text style={styles.emptyTitle}>Secure Gateway</Text>
+            <Text style={styles.emptyText}>
+              All systems operational. Login events will appear here once you're connected.
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </>
   );
@@ -188,6 +294,7 @@ function GuestGate({ tabName, onLoginPress }) {
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function DashboardScreen({
   user, activeTab, onTabChange, onLoginSuccess, onLogout,
+  pushEventId, onPushEventConsumed,
 }) {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
   const [pendingApproval, setPendingApproval] = useState(null);
@@ -255,13 +362,55 @@ export default function DashboardScreen({
     };
 
     tick();
-    const id = setInterval(tick, 4000);
+    const id = setInterval(tick, 15000);
 
     return () => {
       cancelled = true;
       clearInterval(id);
     };
   }, [user]);
+
+  // ── React to a push-notification tap (background / foreground delivery) ────
+  //    pushEventId is set by App.jsx's notification listeners.
+  //    We look for that event in the already-polled pendingApproval first;
+  //    if it's a different id we do a one-shot fetch so the popup shows the
+  //    right data immediately without waiting for the next poll cycle.
+  useEffect(() => {
+    if (!pushEventId || !user) return;
+
+    const surfaceEvent = async () => {
+      try {
+        // If the polled event already matches, just open the popup.
+        if (pendingApproval && String(pendingApproval.id) === String(pushEventId)) {
+          dismissedApprovalIdRef.current = null;
+          setApprovalPopupVisible(true);
+        } else {
+          // Fetch the full pending list and find the matching event.
+          const response = await integrationApi.pending();
+          const matched = (response.data ?? []).find(
+            (ev) => String(ev.id) === String(pushEventId),
+          ) ?? response.data?.[0] ?? null;
+
+          if (matched) {
+            pendingApprovalIdRef.current  = matched.id;
+            dismissedApprovalIdRef.current = null;
+            setPendingApproval(matched);
+            setApprovalPopupVisible(true);
+          }
+        }
+      } catch (_) {
+        // Silently ignore – the regular poll will catch it next cycle.
+      } finally {
+        // Always clear the consumed id so the effect doesn't re-fire.
+        onPushEventConsumed?.();
+      }
+    };
+
+    surfaceEvent();
+  // pendingApproval intentionally excluded – we only want this to fire
+  // when pushEventId changes, not on every poll cycle.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pushEventId, user]);
 
   const dismissApprovalPopup = () => {
     if (!pendingApproval) return;
@@ -305,6 +454,8 @@ export default function DashboardScreen({
             onRestoreApproval={restoreApprovalPopup}
             onRespondToApproval={respondToApproval}
             approvalDecision={approvalDecision}
+            onOpenNotifications={() => onTabChange('notifications')}
+            onOpenIntegrations={() => onTabChange('integrations')}
           />
         );
 
@@ -315,7 +466,7 @@ export default function DashboardScreen({
 
       case 'notifications':
         return isLoggedIn
-          ? <NotificationScreen />
+          ? <NotificationScreen user={user} />
           : <GuestGate tabName="Login Approvals" onLoginPress={openLogin} />;
 
       case 'settings':
@@ -438,6 +589,72 @@ const styles = StyleSheet.create({
   },
   welcomeTitle: { color: 'white', fontSize: 20, fontWeight: '700', marginBottom: 4 },
   welcomeSub:   { color: '#3866E6', fontSize: 13, fontWeight: '500' },
+
+  // Summary Section
+  summarySection: {
+    backgroundColor: '#1E293B',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  summaryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  summaryTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  summaryLink: {
+    color: '#3866E6',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  summaryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+  },
+  summaryIconWrap: {
+    width: 36,
+    height: 36,
+    backgroundColor: '#0F172A',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  summaryItemTitle: {
+    color: '#F8FAFC',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  summaryItemMeta: {
+    color: '#64748B',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  summaryChevron: {
+    color: '#64748B',
+    fontSize: 20,
+    fontWeight: '300',
+    marginLeft: 8,
+  },
+  summaryEmpty: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  summaryEmptyText: {
+    color: '#64748B',
+    fontSize: 13,
+  },
 
   // Feed
   feed: { flex: 1 },
@@ -574,4 +791,53 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(239,68,68,0.3)', borderRadius: 10, padding: 12, alignItems: 'center',
   },
   popupDeclineText: { color: '#F87171', fontWeight: '700' },
+
+  // ── Stat cards (web-matching) ──────────────────────────────────────────
+  statsGrid: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 14,
+  },
+  statCard: {
+    flex: 1, minWidth: '45%',
+    backgroundColor: '#1E293B',
+    borderRadius: 14, padding: 18,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+  },
+  statBlue:   { borderTopWidth: 3, borderTopColor: '#3D5AF1' },
+  statGreen:  { borderTopWidth: 3, borderTopColor: '#22C55E' },
+  statYellow: { borderTopWidth: 3, borderTopColor: '#EAB308' },
+  statRed:    { borderTopWidth: 3, borderTopColor: '#EF4444' },
+  statLabel: {
+    fontSize: 10, fontWeight: '700', color: '#94A3B8',
+    textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8,
+  },
+  statValue: { fontSize: 22, fontWeight: '800' },
+
+  // ── Status panel ───────────────────────────────────────────────────────
+  statusPanel: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    backgroundColor: '#1E293B',
+    borderRadius: 14, padding: 18,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    marginBottom: 12,
+  },
+  statusIconWrap: {
+    width: 48, height: 48,
+    backgroundColor: 'rgba(34,197,94,0.12)',
+    borderRadius: 24,
+    alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
+  },
+  statusTitle: { color: '#4ADE80', fontSize: 14, fontWeight: '700', marginBottom: 3 },
+  statusSub:   { color: '#94A3B8', fontSize: 12, lineHeight: 17 },
+
+  // ── Integration Hub card ───────────────────────────────────────────────
+  integrationCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    backgroundColor: '#1E293B',
+    borderRadius: 14, padding: 18,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    marginBottom: 16,
+  },
+  integrationCardTitle: { color: '#F8FAFC', fontSize: 14, fontWeight: '700', marginBottom: 3 },
+  integrationCardSub:   { color: '#94A3B8', fontSize: 12, lineHeight: 17 },
 });
