@@ -11,15 +11,16 @@ import { Platform } from 'react-native';
 //   Physical device (Expo Go):  http://192.168.x.x:8000/api
 //   Production:                 https://yourdomain.com/api
 const resolveEndpoints = () => {
+  const primary = process.env.EXPO_PUBLIC_API_URL?.trim();
+  const fallback = process.env.EXPO_PUBLIC_API_URL_FALLBACK?.trim();
+
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
     const host = window.location.hostname;
     if (host === 'localhost' || host === '127.0.0.1') {
-      return [`http://${host}:8000/api`];
+      return [`http://${host}:8000/api`, primary, fallback].filter(Boolean);
     }
   }
 
-  const primary = process.env.EXPO_PUBLIC_API_URL?.trim();
-  const fallback = process.env.EXPO_PUBLIC_API_URL_FALLBACK?.trim();
   const localhost = Platform.OS === 'android' ? 'http://10.0.2.2:8000/api' : 'http://127.0.0.1:8000/api';
 
   return [primary || localhost, fallback].filter(Boolean);

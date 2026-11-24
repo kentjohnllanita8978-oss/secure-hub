@@ -12,14 +12,16 @@ import { Platform } from 'react-native';
 import API from '../api/client';
 
 // How the app handles notifications while foregrounded
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList:   true,
-    shouldPlaySound:  true,
-    shouldSetBadge:   false,
-  }),
-});
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList:   true,
+      shouldPlaySound:  true,
+      shouldSetBadge:   false,
+    }),
+  });
+}
 
 /**
  * Requests permission, obtains the Expo Push Token, and registers it
@@ -91,6 +93,10 @@ export async function registerForPushNotificationsAsync() {
  * @returns {() => void} cleanup
  */
 export function addLoginApprovalNotificationListener(onApproval) {
+  if (Platform.OS === 'web') {
+    return () => {};
+  }
+
   const subscription = Notifications.addNotificationResponseReceivedListener(
     (response) => {
       const data = response.notification.request.content.data ?? {};
@@ -116,6 +122,10 @@ export function addLoginApprovalNotificationListener(onApproval) {
  * @returns {() => void} cleanup
  */
 export function addForegroundNotificationListener(onReceived) {
+  if (Platform.OS === 'web') {
+    return () => {};
+  }
+
   const subscription = Notifications.addNotificationReceivedListener(
     (notification) => {
       const data = notification.request.content.data ?? {};

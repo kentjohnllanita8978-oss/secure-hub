@@ -202,6 +202,7 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
               onChangeText={setPassword}
               onFocus={() => setFocusedField('password')}
               onBlur={() => setFocusedField(null)}
+              autoCapitalize="none"
               secureTextEntry={!showPw}
               autoCorrect={false}
               textContentType="password"
